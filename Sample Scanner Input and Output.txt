@@ -1,0 +1,25 @@
+============
+Input: 
+============
+es;rj tv;lem voq34vj a/sldmf ;oi4 vamf ;oqiv lk mc;3 5vlk fm;sfh lak mrco238 c/mf lwuFH /SAM G;OQI4J "AWLMF Q34J /LKMQTV Q3 L5V/K AJ;OQ L3K MF;AOFH LKQ3M451 [U5';WELFM;ipy;h =) :)
+
+32432bace12awf  		=> Numbers with letters within
+"23AASD ASDFAS    => unterminated string constant
+'ASDFAA					=> unterminated character constant
+# @							=> unknown symbols
+
+
+
+============
+Output: 
+============
+Identifier Token "es" found in line 1 column 1
+Semicolon Token ";" found in line 1 column 3
+..
+..
+
+Error found in line 3 column 6
+Recovering: Replacing symbol "b" at column 6 with space
+// "32432 ace12awf"
+Integer Token "32432" found in line 3 column 1
+Identifier Token "ace12awf" found in line 3 column 7

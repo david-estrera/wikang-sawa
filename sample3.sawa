@@ -1,0 +1,10 @@
+# Conditional example with indentation
+baryabol age = 18
+kung age >= 18:
+    magpakita "Adulto ka na"
+    kung age == 18:
+        magpakita "Bagong adulto"
+tapos
+kundi:
+    magpakita "Bata ka pa"
+

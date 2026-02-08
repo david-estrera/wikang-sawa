@@ -1,0 +1,8 @@
+gamitin magpakita
+baryabol x = 10
+baryabol y = 5.5
+kung x > y:
+    magpakita "x ay mas malaki"
+tapos
+magpakita "Tapos na"
+

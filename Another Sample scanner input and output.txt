@@ -1,0 +1,21 @@
+
+============
+Input: 
+============
+spell23asdfa spell qp98uasldjf+/123-23
+
+
+
+============
+Output: 
+============
+
+spell23asdfa an identifier
+spell an identifier
+qp98uasldjf an identifier
++ math op token
+/ math op token
+123 - number constant
+- math op token
+23 number constant
+

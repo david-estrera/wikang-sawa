@@ -1,0 +1,8 @@
+# Loop example
+baryabol counter = 1
+habang counter <= 5:
+    magpakita counter
+    counter = counter + 1
+tapos
+magpakita "Tapos na ang loop"
+

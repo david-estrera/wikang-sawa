@@ -1,0 +1,8 @@
+# Simple arithmetic example
+baryabol a = 10
+baryabol b = 20
+baryabol sum = a + b
+baryabol product = a * b
+magpakita sum
+magpakita product
+

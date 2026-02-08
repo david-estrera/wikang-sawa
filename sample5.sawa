@@ -1,0 +1,17 @@
+# String and logical operators
+baryabol name = "Juan"
+baryabol age = 25
+baryabol isStudent = totoo
+
+kung name == "Juan" at age > 20:
+    magpakita "Kamusta Juan!"
+tapos
+
+kung isStudent o age < 30:
+    magpakita "Ikaw ay estudyante o bata pa"
+tapos
+
+kung hindi isStudent:
+    magpakita "Hindi ka estudyante"
+tapos
+

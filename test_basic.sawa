@@ -1,0 +1,9 @@
+# Basic tokens test
+gamitin magpakita
+baryabol x = 42
+baryabol pi = 3.14
+baryabol message = "Hello, Wikang Sawa!"
+magpakita x
+magpakita pi
+magpakita message
+
