@@ -1,6 +1,6 @@
-# Wikang Sawa ANTLR Lexer - Setup & Execution Guide
+# Wikang Sawa ANTLR Lexer & Parser - Setup & Execution Guide
 
-This guide explains how to set up and use the Wikang Sawa ANTLR Lexer Grammar and Java Scanner Driver.
+This guide explains how to set up and use the Wikang Sawa ANTLR Lexer Grammar, Parser Grammar, and Java Drivers.
 
 ## Prerequisites
 
@@ -15,18 +15,28 @@ This guide explains how to set up and use the Wikang Sawa ANTLR Lexer Grammar an
 
 2. Save the JAR file in your project directory (same directory as `WikangSawaLexer.g4`)
 
-## Step 2: Generate Java Files from Grammar
+## Step 2: Generate Java Files from Grammars
 
-Run the following command to generate the Java lexer files from the ANTLR grammar:
+Run the following commands to generate the Java lexer and parser files from the ANTLR grammars:
 
 ```bash
+# Generate lexer files
 java -jar antlr-4.13.1-complete.jar WikangSawaLexer.g4
+
+# Generate parser files (must run after lexer generation)
+java -jar antlr-4.13.1-complete.jar WikangSawaParser.g4
 ```
 
 This will generate the following Java files:
-- `WikangSawaLexer.java`
-- `WikangSawaLexer.tokens`
-- `WikangSawaLexer.interp` (if using ANTLR 4.13.1+)
+- **Lexer files:**
+  - `WikangSawaLexer.java`
+  - `WikangSawaLexer.tokens`
+  - `WikangSawaLexer.interp` (if using ANTLR 4.13.1+)
+- **Parser files:**
+  - `WikangSawaParser.java`
+  - `WikangSawaParserBaseVisitor.java`
+  - `WikangSawaParserBaseListener.java`
+  - `WikangSawaParser.tokens`
 
 ## Step 3: Compile Java Files
 
@@ -57,6 +67,132 @@ java -cp ".:antlr-4.13.1-complete.jar" ScannerDriver sample.sawa
 ```bash
 java -cp ".;antlr-4.13.1-complete.jar" ScannerDriver sample.sawa
 ```
+
+## Step 5: Run the Parser Driver
+
+Execute the parser driver to recognize and demonstrate language constructs:
+
+### On Unix/Linux/Mac:
+```bash
+java -cp ".:antlr-4.13.1-complete.jar" ParserDriver sample.sawa
+```
+
+### On Windows:
+```bash
+java -cp ".;antlr-4.13.1-complete.jar" ParserDriver sample.sawa
+```
+
+### Parser Output Example (demo format)
+
+The parser prints a clear list of recognized constructs and a summary (suitable for demos):
+
+```
+========================================
+  WIKANG SAWA PARSER - Construct Demo
+========================================
+  File: demo.sawa
+  Status: Parsing successful!
+----------------------------------------
+  Recognized constructs and statements:
+----------------------------------------
+  [1] IMPORT STATEMENT: gamitin magpakita
+  [2] VARIABLE DECLARATION: x = 10  (baryabol)
+  ...
+  [7] CONDITIONAL STATEMENT (kung): condition: x>y
+      --> Then block:
+  [8] PRINT STATEMENT: magpakita "x mas malaki"
+      --> Else block (kundi):
+  [9] PRINT STATEMENT: magpakita "y mas malaki o pantay"
+  [11] LOOP STATEMENT (habang): condition: counter<3
+      --> Loop body:
+  [12] PRINT STATEMENT: magpakita counter
+  [13] ASSIGNMENT STATEMENT: counter = counter+1
+----------------------------------------
+  Summary (constructs recognized):
+----------------------------------------
+    Import statements:     1
+    Variable declarations: 4
+    Assignment statements: 1
+    Print statements:      6
+    Conditional (kung):    1
+    Loop (habang):         1
+    Total statements:      14
+========================================
+  Demo complete.
+========================================
+```
+
+### Run the full construct demo
+
+To show all construct types in one run, use the included `demo.sawa` file:
+
+```bash
+java -cp ".;antlr-4.13.1-complete.jar" ParserDriver demo.sawa
+```
+
+(Use `:` instead of `;` on Unix/Linux/Mac.)
+
+## Recognized Language Constructs
+
+The parser demonstrates recognition of the following Wikang Sawa constructs:
+
+### 1. Import Statements
+- **Syntax**: `gamitin identifier`
+- **Example**: `gamitin magpakita`
+
+### 2. Variable Declarations
+- **Syntax**: `baryabol identifier = expression`
+- **Example**: `baryabol x = 10`, `baryabol y = 5.5`
+
+### 3. Assignment Statements
+- **Syntax**: `identifier = expression`
+- **Example**: `counter = counter + 1`
+
+### 4. Print Statements
+- **Syntax**: `magpakita expression`
+- **Example**: `magpakita "Hello"`, `magpakita x`
+
+### 5. Conditional Statements
+- **Syntax**: `kung expression: block (tapos | (kundi: block tapos))`
+- **Example**: 
+  ```sawa
+  kung age >= 18:
+      magpakita "Adulto"
+  tapos
+  kundi:
+      magpakita "Bata"
+  tapos
+  ```
+
+### 6. Loop Statements
+- **Syntax**: `habang expression: block tapos`
+- **Example**:
+  ```sawa
+  habang counter <= 5:
+      magpakita counter
+      counter = counter + 1
+  tapos
+  ```
+
+### 7. Expression Types
+The parser recognizes expressions with proper operator precedence:
+
+- **Arithmetic**: `+`, `-`, `*`, `/`, `%`
+- **Relational**: `==`, `!=`, `<`, `>`, `<=`, `>=`
+- **Logical**: `at` (AND), `o` (OR), `hindi` (NOT)
+
+**Operator Precedence** (highest to lowest):
+1. Unary operators (`-`, `hindi`)
+2. Multiplicative (`*`, `/`, `%`)
+3. Additive (`+`, `-`)
+4. Relational (`==`, `!=`, `<`, `>`, `<=`, `>=`)
+5. Logical NOT (`hindi`)
+6. Logical AND (`at`)
+7. Logical OR (`o`)
+
+### 8. Block Structure
+- Uses Python-style indentation with `INDENT` and `DEDENT` tokens
+- Blocks are defined by indentation after `:` in conditionals and loops
 
 ## Example Usage
 
@@ -110,10 +246,13 @@ Error: Input file must have a .sawa extension.
 ```
 wikang-sawa/
 ├── WikangSawaLexer.g4          # ANTLR lexer grammar
-├── ScannerDriver.java          # Java scanner driver
-├── README.md                   # This file
-├── antlr-4.13.1-complete.jar  # ANTLR runtime (download separately)
-└── sample.sawa                 # Sample input file (create as needed)
+├── WikangSawaParser.g4          # ANTLR parser grammar
+├── ScannerDriver.java           # Java scanner driver
+├── ParserDriver.java            # Java parser driver
+├── ConstructRecognizer.java     # Custom visitor for construct recognition
+├── README.md                     # This file
+├── antlr-4.13.1-complete.jar    # ANTLR runtime (download separately)
+└── sample*.sawa                  # Sample input files
 ```
 
 ## Additional Notes

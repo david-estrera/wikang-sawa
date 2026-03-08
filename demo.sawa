@@ -1,0 +1,21 @@
+# Wikang Sawa Parser Demo - All Constructs
+# Run: java -cp ".;antlr-4.13.1-complete.jar" ParserDriver demo.sawa
+
+gamitin magpakita
+baryabol x = 10
+baryabol y = 5
+baryabol sum = x + y
+magpakita sum
+magpakita "Kamusta!"
+kung x > y:
+    magpakita "x mas malaki"
+tapos
+kundi:
+    magpakita "y mas malaki o pantay"
+tapos
+baryabol counter = 0
+habang counter < 3:
+    magpakita counter
+    counter = counter + 1
+tapos
+magpakita "Tapos na ang demo"

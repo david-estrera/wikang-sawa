@@ -2,9 +2,7 @@
 baryabol age = 18
 kung age >= 18:
     magpakita "Nasa hustong gulang ka na"
-    kung age == 18:
-        magpakita "Bagong hustong gulang"
 tapos
 kundi:
     magpakita "Bata ka pa"
-
+tapos
