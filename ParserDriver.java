@@ -51,6 +51,11 @@ public class ParserDriver {
             
             // Parse the program
             ParseTree tree = parser.program();
+
+            // Show parse tree (LISP-style) for demo
+            System.out.println();
+            System.out.println("Parse tree (LISP-style):");
+            System.out.println(tree.toStringTree(parser));
             
             // Check for parse errors
             if (parser.getNumberOfSyntaxErrors() > 0) {
@@ -59,7 +64,6 @@ public class ParserDriver {
             }
             
             // Walk the parse tree with our custom visitor (demo output)
-            System.out.println();
             System.out.println("========================================");
             System.out.println("  WIKANG SAWA PARSER - Construct Demo");
             System.out.println("========================================");
@@ -71,6 +75,11 @@ public class ParserDriver {
             ConstructRecognizer recognizer = new ConstructRecognizer();
             recognizer.visitProgram((WikangSawaParser.ProgramContext) tree);
             recognizer.printSummary();
+
+            // Semantic analysis demo (type checks + symbol table)
+            SemanticAnalyzer sema = new SemanticAnalyzer();
+            sema.analyze((WikangSawaParser.ProgramContext) tree);
+            sema.printReport();
             System.out.println("========================================");
             System.out.println("  Demo complete.");
             System.out.println("========================================");

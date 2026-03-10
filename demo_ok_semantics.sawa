@@ -1,0 +1,17 @@
+gamitin magpakita
+
+baryabol x = 10
+baryabol y = 2
+baryabol z = x + y * 3
+
+magpakita z
+
+kung z > 10:
+    magpakita "mas malaki sa 10"
+tapos
+
+habang y < 5:
+    y = y + 1
+    magpakita y
+tapos
+

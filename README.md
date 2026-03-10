@@ -84,7 +84,7 @@ java -cp ".;antlr-4.13.1-complete.jar" ParserDriver sample.sawa
 
 ### Parser Output Example (demo format)
 
-The parser prints a clear list of recognized constructs and a summary (suitable for demos):
+The parser prints a clear list of recognized constructs, a construct summary, and a **semantic-analysis report** (suitable for demos):
 
 ```
 ========================================
@@ -117,6 +117,10 @@ The parser prints a clear list of recognized constructs and a summary (suitable 
     Conditional (kung):    1
     Loop (habang):         1
     Total statements:      14
+----------------------------------------
+  Semantic analysis (demo):
+----------------------------------------
+  Result: Semantic checks passed (no errors).
 ========================================
   Demo complete.
 ========================================
@@ -131,6 +135,18 @@ java -cp ".;antlr-4.13.1-complete.jar" ParserDriver demo.sawa
 ```
 
 (Use `:` instead of `;` on Unix/Linux/Mac.)
+
+### Run the semantic-analysis demos (recommended for presentation)
+
+These two files are designed for a simple “pass vs fail” semantic demo:
+
+- `demo_ok_semantics.sawa`: should parse **and** pass semantic checks
+- `demo_semantic_errors.sawa`: should parse, then show **semantic errors** (undeclared variable, non-boolean condition, non-numeric arithmetic)
+
+```bash
+java -cp ".;antlr-4.13.1-complete.jar" ParserDriver demo_ok_semantics.sawa
+java -cp ".;antlr-4.13.1-complete.jar" ParserDriver demo_semantic_errors.sawa
+```
 
 ## Recognized Language Constructs
 
@@ -261,4 +277,8 @@ wikang-sawa/
 - Comments starting with `#` are skipped
 - String literals support escape sequences (`\"`, `\\`, `\n`, `\t`, etc.)
 - Keywords are case-sensitive and must match exactly (e.g., `gamitin`, `kung`, `habang`)
+- `SemanticAnalyzer.java` implements a minimal semantic pass for demo:
+  - variables must be declared before use
+  - `kung` / `habang` conditions must be boolean
+  - arithmetic operators require numeric operands
 

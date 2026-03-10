@@ -1,0 +1,15 @@
+gamitin magpakita
+
+# 1) undeclared variable used in expression
+magpakita a + 1
+
+# 2) non-boolean condition (number used as condition)
+kung 123:
+    magpakita "hindi boolean ang condition"
+tapos
+
+# 3) non-numeric arithmetic (string * number)
+baryabol s = "hi"
+baryabol bad = s * 2
+magpakita bad
+
