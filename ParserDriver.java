@@ -80,6 +80,28 @@ public class ParserDriver {
             SemanticAnalyzer sema = new SemanticAnalyzer();
             sema.analyze((WikangSawaParser.ProgramContext) tree);
             sema.printReport();
+
+            // Run interpreter only if semantic checks pass
+            if (sema.hasErrors()) {
+                System.out.println("----------------------------------------");
+                System.out.println("  Interpreter: skipped due to semantic errors.");
+                System.out.println("========================================");
+                System.out.println("  Demo complete.");
+                System.out.println("========================================");
+                System.out.println();
+                System.exit(1);
+            }
+
+            System.out.println("----------------------------------------");
+            System.out.println("  Interpreter output:");
+            System.out.println("----------------------------------------");
+            try {
+                Interpreter interpreter = new Interpreter();
+                interpreter.execute((WikangSawaParser.ProgramContext) tree);
+            } catch (InterpreterException re) {
+                System.err.println(re.getMessage());
+                System.exit(1);
+            }
             System.out.println("========================================");
             System.out.println("  Demo complete.");
             System.out.println("========================================");
