@@ -1,0 +1,13 @@
+# PASS: Recursion
+
+gamitin magpakita
+
+punsyon fact(n):
+    kung n <= 1:
+        balik 1
+    tapos
+    balik n * fact(n - 1)
+tapos
+
+magpakita fact(6)  # 720
+

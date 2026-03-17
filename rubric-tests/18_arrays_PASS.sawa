@@ -1,0 +1,8 @@
+# PASS: Arrays (literal + indexing)
+
+gamitin magpakita
+baryabol arr = [1, 2, 3]
+magpakita arr
+magpakita arr[0]
+magpakita arr[2]
+

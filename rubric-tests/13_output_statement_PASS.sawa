@@ -1,0 +1,8 @@
+# PASS: Output statement (magpakita)
+
+gamitin magpakita
+magpakita "Hello, Wikang Sawa!"
+magpakita 123
+magpakita 4.5
+magpakita totoo
+

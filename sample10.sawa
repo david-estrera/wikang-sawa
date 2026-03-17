@@ -1,0 +1,8 @@
+# SAMPLE 10: Brackets/braces and list-like syntax (TOKENS EXIST, FEATURE NOT IMPLEMENTED)
+# Expected demo result:
+# - Lexer recognizes [ ] { } , but parser has no list/array/object rules.
+# - Running ParserDriver should show a syntax/parse error.
+
+baryabol nums = [1, 2, 3]
+magpakita nums
+

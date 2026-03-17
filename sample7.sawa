@@ -1,0 +1,11 @@
+# SAMPLE 7: KAPAG construct (NOT IMPLEMENTED YET)
+# Expected demo result:
+# - Lexer recognizes 'kapag' (token exists), but parser has no 'kapag' statement rule.
+# - Running ParserDriver should show a syntax/parse error.
+
+baryabol x = 2
+
+kapag x == 1:
+    magpakita "isa"
+tapos
+

@@ -1,0 +1,11 @@
+# SAMPLE 9: Using AY / SA style syntax (TOKENS EXIST, GRAMMAR NOT USING THEM)
+# Expected demo result:
+# - Lexer recognizes 'ay' and 'sa', but parser rules don't use them.
+# - Running ParserDriver should show a syntax/parse error.
+
+baryabol x = 10
+
+# Hypothetical spec-like syntax examples:
+x ay 20
+magpakita x
+

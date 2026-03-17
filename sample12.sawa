@@ -1,0 +1,16 @@
+# Arrays demo (array literal + indexing)
+gamitin magpakita
+
+baryabol nums = [10, 20, 30, 40]
+magpakita nums
+
+baryabol first = nums[0]
+baryabol third = nums[2]
+
+magpakita first
+magpakita third
+
+# arithmetic using indexed values
+baryabol total = nums[1] + nums[3]
+magpakita total
+

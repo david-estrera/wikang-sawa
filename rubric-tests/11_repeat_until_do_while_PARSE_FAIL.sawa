@@ -1,0 +1,10 @@
+# PARSE-FAIL: Repeat-until / do-while is not implemented.
+# Hypothetical syntax (not supported):
+# gawin:
+#    ...
+# hanggang condition
+
+gawin:
+    magpakita "hello"
+hanggang totoo
+

@@ -1,0 +1,12 @@
+# PASS: Conditional statements
+
+gamitin magpakita
+baryabol x = 3
+
+kung x > 5:
+    magpakita "malaki"
+tapos
+kundi:
+    magpakita "maliit o pantay"
+tapos
+

@@ -10,15 +10,21 @@ program: statement* EOF;
 // Statements (NEWLINE only at top level; inside blocks use blockStatement)
 statement: blockStatement | NEWLINE;
 blockStatement: importStatement
+              | functionDeclaration
               | variableDeclaration
               | assignmentStatement
               | printStatement
+              | returnStatement
               | conditionalStatement
               | loopStatement
               ;
 
 // Import statement: gamitin identifier (e.g. gamitin magpakita; magpakita is a keyword)
 importStatement: GAMITIN (IDENTIFIER | MAGPAKITA) NEWLINE;
+
+// Function declaration: punsyon name(params): block tapos
+functionDeclaration: PUNSYON IDENTIFIER LPAREN paramList? RPAREN COLON block TAPOS optionalNewlines;
+paramList: IDENTIFIER (COMMA IDENTIFIER)*;
 
 // Variable declaration: baryabol identifier = expression
 variableDeclaration: BARYABOL IDENTIFIER ASSIGN expression NEWLINE;
@@ -28,6 +34,9 @@ assignmentStatement: IDENTIFIER ASSIGN expression NEWLINE;
 
 // Print statement: magpakita expression
 printStatement: MAGPAKITA expression NEWLINE;
+
+// Return statement: balik expression
+returnStatement: BALIK expression NEWLINE;
 
 // Conditional statement: kung expression: block tapos [kundi: block tapos?]
 // Single path NEWLINE* TAPOS so newlines before tapos are always consumed
@@ -65,8 +74,21 @@ arithmeticExpression: term ((PLUS | MINUS) term)*;
 // Terms (multiplication/division/modulo)
 term: factor ((STAR | SLASH | PERCENT) factor)*;
 
-// Factors: unary minus, parentheses, literals, identifiers
-factor: (MINUS)? (literal | IDENTIFIER | LPAREN expression RPAREN);
+// Factors: unary minus, parentheses, literals, identifiers, calls, arrays, indexing
+factor: (MINUS)? postfix;
+
+postfix: primary (LBRACKET expression RBRACKET)*;
+
+primary
+    : literal
+    | IDENTIFIER (LPAREN argList? RPAREN)?
+    | LPAREN expression RPAREN
+    | arrayLiteral
+    ;
+
+argList: expression (COMMA expression)*;
+
+arrayLiteral: LBRACKET (expression (COMMA expression)*)? RBRACKET;
 
 // Literals
 literal: NUMERO

@@ -20,6 +20,7 @@ public class SemanticAnalyzer {
         DECIMAL,
         STRING,
         BOOLEAN,
+        ARRAY,
         NULL,
         UNKNOWN
     }
@@ -37,6 +38,7 @@ public class SemanticAnalyzer {
     }
 
     private final Map<String, ValueType> symbols = new LinkedHashMap<>();
+    private final Map<String, Integer> functions = new LinkedHashMap<>();
     private final List<SemanticError> errors = new ArrayList<>();
 
     // For demo stats
@@ -100,6 +102,10 @@ public class SemanticAnalyzer {
             // No semantic checks for imports in this demo.
             return;
         }
+        if (ctx.functionDeclaration() != null) {
+            analyzeFunctionDeclaration(ctx.functionDeclaration());
+            return;
+        }
         if (ctx.variableDeclaration() != null) {
             analyzeVariableDeclaration(ctx.variableDeclaration());
             return;
@@ -112,6 +118,11 @@ public class SemanticAnalyzer {
             analyzePrint(ctx.printStatement());
             return;
         }
+        if (ctx.returnStatement() != null) {
+            // Minimal: just type-check the expression
+            typeOfExpression(ctx.returnStatement().expression());
+            return;
+        }
         if (ctx.conditionalStatement() != null) {
             analyzeConditional(ctx.conditionalStatement());
             return;
@@ -120,6 +131,28 @@ public class SemanticAnalyzer {
             analyzeLoop(ctx.loopStatement());
             return;
         }
+    }
+
+    private void analyzeFunctionDeclaration(WikangSawaParser.FunctionDeclarationContext ctx) {
+        String name = ctx.IDENTIFIER().getText();
+        int arity = 0;
+        if (ctx.paramList() != null) arity = ctx.paramList().IDENTIFIER().size();
+        if (functions.containsKey(name)) {
+            error(ctx.IDENTIFIER().getSymbol(), "Function '" + name + "' is already declared.");
+            return;
+        }
+        functions.put(name, arity);
+
+        // New scope for parameters (simple approach; doesn't restore outer vars inside function body)
+        Map<String, ValueType> saved = new LinkedHashMap<>(symbols);
+        if (ctx.paramList() != null) {
+            for (var id : ctx.paramList().IDENTIFIER()) {
+                symbols.put(id.getText(), ValueType.UNKNOWN);
+            }
+        }
+        analyzeBlock(ctx.block());
+        symbols.clear();
+        symbols.putAll(saved);
     }
 
     private void analyzeVariableDeclaration(WikangSawaParser.VariableDeclarationContext ctx) {
@@ -246,23 +279,7 @@ public class SemanticAnalyzer {
 
     private ValueType typeOfFactor(WikangSawaParser.FactorContext ctx) {
         checkedExpressions++;
-
-        ValueType base;
-        if (ctx.literal() != null) {
-            base = typeOfLiteral(ctx.literal());
-        } else if (ctx.IDENTIFIER() != null) {
-            String name = ctx.IDENTIFIER().getText();
-            ValueType t = symbols.get(name);
-            if (t == null) {
-                error(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is not declared (cannot use in expression).");
-                t = ValueType.UNKNOWN;
-            }
-            base = t;
-        } else {
-            // ( expression )
-            base = typeOfExpression(ctx.expression());
-        }
-
+        ValueType base = typeOfPostfix(ctx.postfix());
         if (ctx.MINUS() != null) {
             if (!isNumeric(base)) {
                 error(ctx.getStart(), "Unary '-' requires a numeric operand, got " + base + ".");
@@ -270,6 +287,57 @@ public class SemanticAnalyzer {
             return base;
         }
         return base;
+    }
+
+    private ValueType typeOfPostfix(WikangSawaParser.PostfixContext ctx) {
+        checkedExpressions++;
+        ValueType base = typeOfPrimary(ctx.primary());
+        // Indexing: result becomes UNKNOWN (element type not tracked in this demo)
+        if (ctx.expression().size() > 0) {
+            for (var e : ctx.expression()) {
+                typeOfExpression(e);
+            }
+            return ValueType.UNKNOWN;
+        }
+        return base;
+    }
+
+    private ValueType typeOfPrimary(WikangSawaParser.PrimaryContext ctx) {
+        checkedExpressions++;
+        if (ctx.literal() != null) return typeOfLiteral(ctx.literal());
+        if (ctx.arrayLiteral() != null) {
+            for (var e : ctx.arrayLiteral().expression()) typeOfExpression(e);
+            return ValueType.ARRAY;
+        }
+        if (ctx.expression() != null) return typeOfExpression(ctx.expression());
+
+        if (ctx.IDENTIFIER() != null) {
+            String name = ctx.IDENTIFIER().getText();
+            // Function call if LPAREN present
+            if (ctx.LPAREN() != null) {
+                int arity = 0;
+                if (ctx.argList() != null) arity = ctx.argList().expression().size();
+                Integer expected = functions.get(name);
+                if (expected == null) {
+                    error(ctx.IDENTIFIER().getSymbol(), "Function '" + name + "' is not declared.");
+                } else if (expected != arity) {
+                    error(ctx.IDENTIFIER().getSymbol(), "Function '" + name + "' expects " + expected + " argument(s), got " + arity + ".");
+                }
+                if (ctx.argList() != null) {
+                    for (var e : ctx.argList().expression()) typeOfExpression(e);
+                }
+                return ValueType.UNKNOWN;
+            }
+
+            ValueType t = symbols.get(name);
+            if (t == null) {
+                error(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is not declared (cannot use in expression).");
+                return ValueType.UNKNOWN;
+            }
+            return t;
+        }
+
+        return ValueType.UNKNOWN;
     }
 
     private ValueType typeOfLiteral(WikangSawaParser.LiteralContext ctx) {

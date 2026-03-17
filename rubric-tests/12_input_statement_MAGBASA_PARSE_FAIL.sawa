@@ -1,0 +1,6 @@
+# PARSE-FAIL: Input statement (magbasa) is not implemented in the parser/interpreter.
+
+magpakita "Ilagay ang edad:"
+magbasa age
+magpakita age
+

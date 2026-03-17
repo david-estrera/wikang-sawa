@@ -1,0 +1,9 @@
+# SAMPLE 8: MAGBASA input (NOT IMPLEMENTED YET)
+# Expected demo result:
+# - Lexer recognizes 'magbasa' (token exists), but parser has no input/read statement rule.
+# - Running ParserDriver should show a syntax/parse error.
+
+magpakita "Ilagay ang pangalan:"
+magbasa name
+magpakita name
+

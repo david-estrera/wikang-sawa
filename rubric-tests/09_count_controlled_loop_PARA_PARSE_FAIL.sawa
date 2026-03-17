@@ -1,0 +1,7 @@
+# PARSE-FAIL: Count-controlled loop (para/for) not implemented.
+
+baryabol i = 0
+para i = 1:
+    magpakita i
+tapos
+

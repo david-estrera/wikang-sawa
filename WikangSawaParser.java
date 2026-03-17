@@ -16,50 +16,54 @@ public class WikangSawaParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		INDENT=1, DEDENT=2, GAMITIN=3, KUNG=4, HABANG=5, BARYABOL=6, TAPOS=7, 
-		PARA=8, KAPAG=9, KUNDI=10, SA=11, AY=12, MAGPAKITA=13, MAGBASA=14, TOTOO=15, 
-		MALI=16, WALA=17, AT=18, O=19, HINDI=20, EQUAL=21, NOT_EQUAL=22, LT=23, 
-		GT=24, LE=25, GE=26, PLUS=27, MINUS=28, STAR=29, SLASH=30, PERCENT=31, 
-		ASSIGN=32, LPAREN=33, RPAREN=34, LBRACKET=35, RBRACKET=36, LBRACE=37, 
-		RBRACE=38, COMMA=39, SEMICOLON=40, COLON=41, DOT=42, NUMERO=43, DESIMAL=44, 
-		SALITA=45, IDENTIFIER=46, COMMENT=47, WS=48, NEWLINE=49;
+		INDENT=1, DEDENT=2, GAMITIN=3, PUNSYON=4, BALIK=5, KUNG=6, HABANG=7, BARYABOL=8, 
+		TAPOS=9, PARA=10, KAPAG=11, KUNDI=12, SA=13, AY=14, MAGPAKITA=15, MAGBASA=16, 
+		TOTOO=17, MALI=18, WALA=19, AT=20, O=21, HINDI=22, EQUAL=23, NOT_EQUAL=24, 
+		LT=25, GT=26, LE=27, GE=28, PLUS=29, MINUS=30, STAR=31, SLASH=32, PERCENT=33, 
+		ASSIGN=34, LPAREN=35, RPAREN=36, LBRACKET=37, RBRACKET=38, LBRACE=39, 
+		RBRACE=40, COMMA=41, SEMICOLON=42, COLON=43, DOT=44, NUMERO=45, DESIMAL=46, 
+		SALITA=47, IDENTIFIER=48, COMMENT=49, WS=50, NEWLINE=51;
 	public static final int
 		RULE_program = 0, RULE_statement = 1, RULE_blockStatement = 2, RULE_importStatement = 3, 
-		RULE_variableDeclaration = 4, RULE_assignmentStatement = 5, RULE_printStatement = 6, 
-		RULE_optionalNewlines = 7, RULE_conditionalStatement = 8, RULE_loopStatement = 9, 
-		RULE_block = 10, RULE_expression = 11, RULE_andExpression = 12, RULE_notExpression = 13, 
-		RULE_comparisonExpression = 14, RULE_relOp = 15, RULE_arithmeticExpression = 16, 
-		RULE_term = 17, RULE_factor = 18, RULE_literal = 19;
+		RULE_functionDeclaration = 4, RULE_paramList = 5, RULE_variableDeclaration = 6, 
+		RULE_assignmentStatement = 7, RULE_printStatement = 8, RULE_returnStatement = 9, 
+		RULE_optionalNewlines = 10, RULE_conditionalStatement = 11, RULE_loopStatement = 12, 
+		RULE_block = 13, RULE_expression = 14, RULE_andExpression = 15, RULE_notExpression = 16, 
+		RULE_comparisonExpression = 17, RULE_relOp = 18, RULE_arithmeticExpression = 19, 
+		RULE_term = 20, RULE_factor = 21, RULE_postfix = 22, RULE_primary = 23, 
+		RULE_argList = 24, RULE_arrayLiteral = 25, RULE_literal = 26;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"program", "statement", "blockStatement", "importStatement", "variableDeclaration", 
-			"assignmentStatement", "printStatement", "optionalNewlines", "conditionalStatement", 
-			"loopStatement", "block", "expression", "andExpression", "notExpression", 
-			"comparisonExpression", "relOp", "arithmeticExpression", "term", "factor", 
-			"literal"
+			"program", "statement", "blockStatement", "importStatement", "functionDeclaration", 
+			"paramList", "variableDeclaration", "assignmentStatement", "printStatement", 
+			"returnStatement", "optionalNewlines", "conditionalStatement", "loopStatement", 
+			"block", "expression", "andExpression", "notExpression", "comparisonExpression", 
+			"relOp", "arithmeticExpression", "term", "factor", "postfix", "primary", 
+			"argList", "arrayLiteral", "literal"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, null, null, "'gamitin'", "'kung'", "'habang'", "'baryabol'", "'tapos'", 
-			"'para'", "'kapag'", "'kundi'", "'sa'", "'ay'", "'magpakita'", "'magbasa'", 
-			"'totoo'", "'mali'", "'wala'", "'at'", "'o'", "'hindi'", "'=='", "'!='", 
-			"'<'", "'>'", "'<='", "'>='", "'+'", "'-'", "'*'", "'/'", "'%'", "'='", 
-			"'('", "')'", "'['", "']'", "'{'", "'}'", "','", "';'", "':'", "'.'"
+			null, null, null, "'gamitin'", "'punsyon'", "'balik'", "'kung'", "'habang'", 
+			"'baryabol'", "'tapos'", "'para'", "'kapag'", "'kundi'", "'sa'", "'ay'", 
+			"'magpakita'", "'magbasa'", "'totoo'", "'mali'", "'wala'", "'at'", "'o'", 
+			"'hindi'", "'=='", "'!='", "'<'", "'>'", "'<='", "'>='", "'+'", "'-'", 
+			"'*'", "'/'", "'%'", "'='", "'('", "')'", "'['", "']'", "'{'", "'}'", 
+			"','", "';'", "':'", "'.'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "INDENT", "DEDENT", "GAMITIN", "KUNG", "HABANG", "BARYABOL", "TAPOS", 
-			"PARA", "KAPAG", "KUNDI", "SA", "AY", "MAGPAKITA", "MAGBASA", "TOTOO", 
-			"MALI", "WALA", "AT", "O", "HINDI", "EQUAL", "NOT_EQUAL", "LT", "GT", 
-			"LE", "GE", "PLUS", "MINUS", "STAR", "SLASH", "PERCENT", "ASSIGN", "LPAREN", 
-			"RPAREN", "LBRACKET", "RBRACKET", "LBRACE", "RBRACE", "COMMA", "SEMICOLON", 
-			"COLON", "DOT", "NUMERO", "DESIMAL", "SALITA", "IDENTIFIER", "COMMENT", 
-			"WS", "NEWLINE"
+			null, "INDENT", "DEDENT", "GAMITIN", "PUNSYON", "BALIK", "KUNG", "HABANG", 
+			"BARYABOL", "TAPOS", "PARA", "KAPAG", "KUNDI", "SA", "AY", "MAGPAKITA", 
+			"MAGBASA", "TOTOO", "MALI", "WALA", "AT", "O", "HINDI", "EQUAL", "NOT_EQUAL", 
+			"LT", "GT", "LE", "GE", "PLUS", "MINUS", "STAR", "SLASH", "PERCENT", 
+			"ASSIGN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "LBRACE", "RBRACE", 
+			"COMMA", "SEMICOLON", "COLON", "DOT", "NUMERO", "DESIMAL", "SALITA", 
+			"IDENTIFIER", "COMMENT", "WS", "NEWLINE"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -127,12 +131,9 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterProgram(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitProgram(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitProgram(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -143,21 +144,21 @@ public class WikangSawaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(43);
+			setState(57);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 633318697607288L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2533274790429176L) != 0)) {
 				{
 				{
-				setState(40);
+				setState(54);
 				statement();
 				}
 				}
-				setState(45);
+				setState(59);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(46);
+			setState(60);
 			match(EOF);
 			}
 		}
@@ -183,12 +184,9 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_statement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -196,10 +194,12 @@ public class WikangSawaParser extends Parser {
 		StatementContext _localctx = new StatementContext(_ctx, getState());
 		enterRule(_localctx, 2, RULE_statement);
 		try {
-			setState(50);
+			setState(64);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case GAMITIN:
+			case PUNSYON:
+			case BALIK:
 			case KUNG:
 			case HABANG:
 			case BARYABOL:
@@ -207,14 +207,14 @@ public class WikangSawaParser extends Parser {
 			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(48);
+				setState(62);
 				blockStatement();
 				}
 				break;
 			case NEWLINE:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(49);
+				setState(63);
 				match(NEWLINE);
 				}
 				break;
@@ -238,6 +238,9 @@ public class WikangSawaParser extends Parser {
 		public ImportStatementContext importStatement() {
 			return getRuleContext(ImportStatementContext.class,0);
 		}
+		public FunctionDeclarationContext functionDeclaration() {
+			return getRuleContext(FunctionDeclarationContext.class,0);
+		}
 		public VariableDeclarationContext variableDeclaration() {
 			return getRuleContext(VariableDeclarationContext.class,0);
 		}
@@ -246,6 +249,9 @@ public class WikangSawaParser extends Parser {
 		}
 		public PrintStatementContext printStatement() {
 			return getRuleContext(PrintStatementContext.class,0);
+		}
+		public ReturnStatementContext returnStatement() {
+			return getRuleContext(ReturnStatementContext.class,0);
 		}
 		public ConditionalStatementContext conditionalStatement() {
 			return getRuleContext(ConditionalStatementContext.class,0);
@@ -258,12 +264,9 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_blockStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterBlockStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitBlockStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitBlockStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -271,48 +274,62 @@ public class WikangSawaParser extends Parser {
 		BlockStatementContext _localctx = new BlockStatementContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_blockStatement);
 		try {
-			setState(58);
+			setState(74);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case GAMITIN:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(52);
+				setState(66);
 				importStatement();
 				}
 				break;
-			case BARYABOL:
+			case PUNSYON:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(53);
+				setState(67);
+				functionDeclaration();
+				}
+				break;
+			case BARYABOL:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(68);
 				variableDeclaration();
 				}
 				break;
 			case IDENTIFIER:
-				enterOuterAlt(_localctx, 3);
+				enterOuterAlt(_localctx, 4);
 				{
-				setState(54);
+				setState(69);
 				assignmentStatement();
 				}
 				break;
 			case MAGPAKITA:
-				enterOuterAlt(_localctx, 4);
+				enterOuterAlt(_localctx, 5);
 				{
-				setState(55);
+				setState(70);
 				printStatement();
 				}
 				break;
-			case KUNG:
-				enterOuterAlt(_localctx, 5);
+			case BALIK:
+				enterOuterAlt(_localctx, 6);
 				{
-				setState(56);
+				setState(71);
+				returnStatement();
+				}
+				break;
+			case KUNG:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(72);
 				conditionalStatement();
 				}
 				break;
 			case HABANG:
-				enterOuterAlt(_localctx, 6);
+				enterOuterAlt(_localctx, 8);
 				{
-				setState(57);
+				setState(73);
 				loopStatement();
 				}
 				break;
@@ -342,12 +359,9 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_importStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterImportStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitImportStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitImportStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -358,9 +372,9 @@ public class WikangSawaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(60);
+			setState(76);
 			match(GAMITIN);
-			setState(61);
+			setState(77);
 			_la = _input.LA(1);
 			if ( !(_la==MAGPAKITA || _la==IDENTIFIER) ) {
 			_errHandler.recoverInline(this);
@@ -370,8 +384,141 @@ public class WikangSawaParser extends Parser {
 				_errHandler.reportMatch(this);
 				consume();
 			}
-			setState(62);
+			setState(78);
 			match(NEWLINE);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class FunctionDeclarationContext extends ParserRuleContext {
+		public TerminalNode PUNSYON() { return getToken(WikangSawaParser.PUNSYON, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(WikangSawaParser.IDENTIFIER, 0); }
+		public TerminalNode LPAREN() { return getToken(WikangSawaParser.LPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(WikangSawaParser.RPAREN, 0); }
+		public TerminalNode COLON() { return getToken(WikangSawaParser.COLON, 0); }
+		public BlockContext block() {
+			return getRuleContext(BlockContext.class,0);
+		}
+		public TerminalNode TAPOS() { return getToken(WikangSawaParser.TAPOS, 0); }
+		public OptionalNewlinesContext optionalNewlines() {
+			return getRuleContext(OptionalNewlinesContext.class,0);
+		}
+		public ParamListContext paramList() {
+			return getRuleContext(ParamListContext.class,0);
+		}
+		public FunctionDeclarationContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_functionDeclaration; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitFunctionDeclaration(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final FunctionDeclarationContext functionDeclaration() throws RecognitionException {
+		FunctionDeclarationContext _localctx = new FunctionDeclarationContext(_ctx, getState());
+		enterRule(_localctx, 8, RULE_functionDeclaration);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(80);
+			match(PUNSYON);
+			setState(81);
+			match(IDENTIFIER);
+			setState(82);
+			match(LPAREN);
+			setState(84);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==IDENTIFIER) {
+				{
+				setState(83);
+				paramList();
+				}
+			}
+
+			setState(86);
+			match(RPAREN);
+			setState(87);
+			match(COLON);
+			setState(88);
+			block();
+			setState(89);
+			match(TAPOS);
+			setState(90);
+			optionalNewlines();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ParamListContext extends ParserRuleContext {
+		public List<TerminalNode> IDENTIFIER() { return getTokens(WikangSawaParser.IDENTIFIER); }
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(WikangSawaParser.IDENTIFIER, i);
+		}
+		public List<TerminalNode> COMMA() { return getTokens(WikangSawaParser.COMMA); }
+		public TerminalNode COMMA(int i) {
+			return getToken(WikangSawaParser.COMMA, i);
+		}
+		public ParamListContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_paramList; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitParamList(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ParamListContext paramList() throws RecognitionException {
+		ParamListContext _localctx = new ParamListContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_paramList);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(92);
+			match(IDENTIFIER);
+			setState(97);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(93);
+				match(COMMA);
+				setState(94);
+				match(IDENTIFIER);
+				}
+				}
+				setState(99);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -399,30 +546,27 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_variableDeclaration; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterVariableDeclaration(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitVariableDeclaration(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitVariableDeclaration(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final VariableDeclarationContext variableDeclaration() throws RecognitionException {
 		VariableDeclarationContext _localctx = new VariableDeclarationContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_variableDeclaration);
+		enterRule(_localctx, 12, RULE_variableDeclaration);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(64);
+			setState(100);
 			match(BARYABOL);
-			setState(65);
+			setState(101);
 			match(IDENTIFIER);
-			setState(66);
+			setState(102);
 			match(ASSIGN);
-			setState(67);
+			setState(103);
 			expression();
-			setState(68);
+			setState(104);
 			match(NEWLINE);
 			}
 		}
@@ -450,28 +594,25 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_assignmentStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterAssignmentStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitAssignmentStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitAssignmentStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final AssignmentStatementContext assignmentStatement() throws RecognitionException {
 		AssignmentStatementContext _localctx = new AssignmentStatementContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_assignmentStatement);
+		enterRule(_localctx, 14, RULE_assignmentStatement);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(70);
+			setState(106);
 			match(IDENTIFIER);
-			setState(71);
+			setState(107);
 			match(ASSIGN);
-			setState(72);
+			setState(108);
 			expression();
-			setState(73);
+			setState(109);
 			match(NEWLINE);
 			}
 		}
@@ -498,26 +639,66 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_printStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterPrintStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitPrintStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitPrintStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final PrintStatementContext printStatement() throws RecognitionException {
 		PrintStatementContext _localctx = new PrintStatementContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_printStatement);
+		enterRule(_localctx, 16, RULE_printStatement);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(75);
+			setState(111);
 			match(MAGPAKITA);
-			setState(76);
+			setState(112);
 			expression();
-			setState(77);
+			setState(113);
+			match(NEWLINE);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ReturnStatementContext extends ParserRuleContext {
+		public TerminalNode BALIK() { return getToken(WikangSawaParser.BALIK, 0); }
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
+		}
+		public TerminalNode NEWLINE() { return getToken(WikangSawaParser.NEWLINE, 0); }
+		public ReturnStatementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_returnStatement; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitReturnStatement(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ReturnStatementContext returnStatement() throws RecognitionException {
+		ReturnStatementContext _localctx = new ReturnStatementContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_returnStatement);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(115);
+			match(BALIK);
+			setState(116);
+			expression();
+			setState(117);
 			match(NEWLINE);
 			}
 		}
@@ -543,37 +724,34 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_optionalNewlines; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterOptionalNewlines(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitOptionalNewlines(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitOptionalNewlines(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final OptionalNewlinesContext optionalNewlines() throws RecognitionException {
 		OptionalNewlinesContext _localctx = new OptionalNewlinesContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_optionalNewlines);
+		enterRule(_localctx, 20, RULE_optionalNewlines);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(82);
+			setState(122);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,5,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(79);
+					setState(119);
 					match(NEWLINE);
 					}
 					} 
 				}
-				setState(84);
+				setState(124);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,5,_ctx);
 			}
 			}
 		}
@@ -624,67 +802,64 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_conditionalStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterConditionalStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitConditionalStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitConditionalStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ConditionalStatementContext conditionalStatement() throws RecognitionException {
 		ConditionalStatementContext _localctx = new ConditionalStatementContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_conditionalStatement);
+		enterRule(_localctx, 22, RULE_conditionalStatement);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(85);
+			setState(125);
 			match(KUNG);
-			setState(86);
+			setState(126);
 			expression();
-			setState(87);
+			setState(127);
 			match(COLON);
-			setState(88);
+			setState(128);
 			block();
-			setState(92);
+			setState(132);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEWLINE) {
 				{
 				{
-				setState(89);
+				setState(129);
 				match(NEWLINE);
 				}
 				}
-				setState(94);
+				setState(134);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(95);
+			setState(135);
 			match(TAPOS);
-			setState(104);
+			setState(144);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,6,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
 				{
-				setState(96);
+				setState(136);
 				optionalNewlines();
-				setState(97);
+				setState(137);
 				match(KUNDI);
-				setState(98);
+				setState(138);
 				match(COLON);
-				setState(99);
+				setState(139);
 				block();
-				setState(100);
+				setState(140);
 				optionalNewlines();
-				setState(102);
+				setState(142);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==TAPOS) {
 					{
-					setState(101);
+					setState(141);
 					match(TAPOS);
 					}
 				}
@@ -692,7 +867,7 @@ public class WikangSawaParser extends Parser {
 				}
 				break;
 			}
-			setState(106);
+			setState(146);
 			optionalNewlines();
 			}
 		}
@@ -724,37 +899,34 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_loopStatement; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterLoopStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitLoopStatement(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitLoopStatement(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final LoopStatementContext loopStatement() throws RecognitionException {
 		LoopStatementContext _localctx = new LoopStatementContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_loopStatement);
+		enterRule(_localctx, 24, RULE_loopStatement);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(108);
+			setState(148);
 			match(HABANG);
-			setState(109);
+			setState(149);
 			expression();
-			setState(110);
+			setState(150);
 			match(COLON);
-			setState(111);
+			setState(151);
 			block();
-			setState(112);
+			setState(152);
 			match(TAPOS);
-			setState(114);
+			setState(154);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
 			case 1:
 				{
-				setState(113);
+				setState(153);
 				match(NEWLINE);
 				}
 				break;
@@ -791,55 +963,52 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_block; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterBlock(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitBlock(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitBlock(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final BlockContext block() throws RecognitionException {
 		BlockContext _localctx = new BlockContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_block);
+		enterRule(_localctx, 26, RULE_block);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(116);
+			setState(156);
 			match(NEWLINE);
-			setState(117);
+			setState(157);
 			match(INDENT);
-			setState(119); 
+			setState(159); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(118);
+				setState(158);
 				blockStatement();
 				}
 				}
-				setState(121); 
+				setState(161); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 70368744185976L) != 0) );
-			setState(126);
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 281474976743928L) != 0) );
+			setState(166);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEWLINE) {
 				{
 				{
-				setState(123);
+				setState(163);
 				match(NEWLINE);
 				}
 				}
-				setState(128);
+				setState(168);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(129);
+			setState(169);
 			match(DEDENT);
 			}
 		}
@@ -871,37 +1040,34 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_expression; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitExpression(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitExpression(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ExpressionContext expression() throws RecognitionException {
 		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_expression);
+		enterRule(_localctx, 28, RULE_expression);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(131);
+			setState(171);
 			andExpression();
-			setState(136);
+			setState(176);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==O) {
 				{
 				{
-				setState(132);
+				setState(172);
 				match(O);
-				setState(133);
+				setState(173);
 				andExpression();
 				}
 				}
-				setState(138);
+				setState(178);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -935,37 +1101,34 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_andExpression; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterAndExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitAndExpression(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitAndExpression(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final AndExpressionContext andExpression() throws RecognitionException {
 		AndExpressionContext _localctx = new AndExpressionContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_andExpression);
+		enterRule(_localctx, 30, RULE_andExpression);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(139);
+			setState(179);
 			notExpression();
-			setState(144);
+			setState(184);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==AT) {
 				{
 				{
-				setState(140);
+				setState(180);
 				match(AT);
-				setState(141);
+				setState(181);
 				notExpression();
 				}
 				}
-				setState(146);
+				setState(186);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -996,28 +1159,25 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_notExpression; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterNotExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitNotExpression(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitNotExpression(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final NotExpressionContext notExpression() throws RecognitionException {
 		NotExpressionContext _localctx = new NotExpressionContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_notExpression);
+		enterRule(_localctx, 32, RULE_notExpression);
 		try {
-			setState(150);
+			setState(190);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case HINDI:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(147);
+				setState(187);
 				match(HINDI);
-				setState(148);
+				setState(188);
 				notExpression();
 				}
 				break;
@@ -1026,13 +1186,14 @@ public class WikangSawaParser extends Parser {
 			case WALA:
 			case MINUS:
 			case LPAREN:
+			case LBRACKET:
 			case NUMERO:
 			case DESIMAL:
 			case SALITA:
 			case IDENTIFIER:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(149);
+				setState(189);
 				comparisonExpression();
 				}
 				break;
@@ -1067,32 +1228,29 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_comparisonExpression; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterComparisonExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitComparisonExpression(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitComparisonExpression(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ComparisonExpressionContext comparisonExpression() throws RecognitionException {
 		ComparisonExpressionContext _localctx = new ComparisonExpressionContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_comparisonExpression);
+		enterRule(_localctx, 34, RULE_comparisonExpression);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(152);
+			setState(192);
 			arithmeticExpression();
-			setState(156);
+			setState(196);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 132120576L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 528482304L) != 0)) {
 				{
-				setState(153);
+				setState(193);
 				relOp();
-				setState(154);
+				setState(194);
 				arithmeticExpression();
 				}
 			}
@@ -1123,25 +1281,22 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_relOp; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterRelOp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitRelOp(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitRelOp(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final RelOpContext relOp() throws RecognitionException {
 		RelOpContext _localctx = new RelOpContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_relOp);
+		enterRule(_localctx, 36, RULE_relOp);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(158);
+			setState(198);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 132120576L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 528482304L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -1183,31 +1338,28 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_arithmeticExpression; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterArithmeticExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitArithmeticExpression(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitArithmeticExpression(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ArithmeticExpressionContext arithmeticExpression() throws RecognitionException {
 		ArithmeticExpressionContext _localctx = new ArithmeticExpressionContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_arithmeticExpression);
+		enterRule(_localctx, 38, RULE_arithmeticExpression);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(160);
+			setState(200);
 			term();
-			setState(165);
+			setState(205);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==PLUS || _la==MINUS) {
 				{
 				{
-				setState(161);
+				setState(201);
 				_la = _input.LA(1);
 				if ( !(_la==PLUS || _la==MINUS) ) {
 				_errHandler.recoverInline(this);
@@ -1217,11 +1369,11 @@ public class WikangSawaParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(162);
+				setState(202);
 				term();
 				}
 				}
-				setState(167);
+				setState(207);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1263,33 +1415,30 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_term; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterTerm(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitTerm(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitTerm(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final TermContext term() throws RecognitionException {
 		TermContext _localctx = new TermContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_term);
+		enterRule(_localctx, 40, RULE_term);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(168);
+			setState(208);
 			factor();
-			setState(173);
+			setState(213);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3758096384L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 15032385536L) != 0)) {
 				{
 				{
-				setState(169);
+				setState(209);
 				_la = _input.LA(1);
-				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 3758096384L) != 0)) ) {
+				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 15032385536L) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1297,11 +1446,11 @@ public class WikangSawaParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(170);
+				setState(210);
 				factor();
 				}
 				}
-				setState(175);
+				setState(215);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1320,48 +1469,157 @@ public class WikangSawaParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class FactorContext extends ParserRuleContext {
-		public LiteralContext literal() {
-			return getRuleContext(LiteralContext.class,0);
+		public PostfixContext postfix() {
+			return getRuleContext(PostfixContext.class,0);
 		}
-		public TerminalNode IDENTIFIER() { return getToken(WikangSawaParser.IDENTIFIER, 0); }
-		public TerminalNode LPAREN() { return getToken(WikangSawaParser.LPAREN, 0); }
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class,0);
-		}
-		public TerminalNode RPAREN() { return getToken(WikangSawaParser.RPAREN, 0); }
 		public TerminalNode MINUS() { return getToken(WikangSawaParser.MINUS, 0); }
 		public FactorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_factor; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterFactor(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitFactor(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitFactor(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final FactorContext factor() throws RecognitionException {
 		FactorContext _localctx = new FactorContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_factor);
+		enterRule(_localctx, 42, RULE_factor);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(177);
+			setState(217);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==MINUS) {
 				{
-				setState(176);
+				setState(216);
 				match(MINUS);
 				}
 			}
 
-			setState(185);
+			setState(219);
+			postfix();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PostfixContext extends ParserRuleContext {
+		public PrimaryContext primary() {
+			return getRuleContext(PrimaryContext.class,0);
+		}
+		public List<TerminalNode> LBRACKET() { return getTokens(WikangSawaParser.LBRACKET); }
+		public TerminalNode LBRACKET(int i) {
+			return getToken(WikangSawaParser.LBRACKET, i);
+		}
+		public List<ExpressionContext> expression() {
+			return getRuleContexts(ExpressionContext.class);
+		}
+		public ExpressionContext expression(int i) {
+			return getRuleContext(ExpressionContext.class,i);
+		}
+		public List<TerminalNode> RBRACKET() { return getTokens(WikangSawaParser.RBRACKET); }
+		public TerminalNode RBRACKET(int i) {
+			return getToken(WikangSawaParser.RBRACKET, i);
+		}
+		public PostfixContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_postfix; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitPostfix(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final PostfixContext postfix() throws RecognitionException {
+		PostfixContext _localctx = new PostfixContext(_ctx, getState());
+		enterRule(_localctx, 44, RULE_postfix);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(221);
+			primary();
+			setState(228);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==LBRACKET) {
+				{
+				{
+				setState(222);
+				match(LBRACKET);
+				setState(223);
+				expression();
+				setState(224);
+				match(RBRACKET);
+				}
+				}
+				setState(230);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PrimaryContext extends ParserRuleContext {
+		public LiteralContext literal() {
+			return getRuleContext(LiteralContext.class,0);
+		}
+		public TerminalNode IDENTIFIER() { return getToken(WikangSawaParser.IDENTIFIER, 0); }
+		public TerminalNode LPAREN() { return getToken(WikangSawaParser.LPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(WikangSawaParser.RPAREN, 0); }
+		public ArgListContext argList() {
+			return getRuleContext(ArgListContext.class,0);
+		}
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
+		}
+		public ArrayLiteralContext arrayLiteral() {
+			return getRuleContext(ArrayLiteralContext.class,0);
+		}
+		public PrimaryContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_primary; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitPrimary(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final PrimaryContext primary() throws RecognitionException {
+		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
+		enterRule(_localctx, 46, RULE_primary);
+		int _la;
+		try {
+			setState(245);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case TOTOO:
@@ -1370,30 +1628,197 @@ public class WikangSawaParser extends Parser {
 			case NUMERO:
 			case DESIMAL:
 			case SALITA:
+				enterOuterAlt(_localctx, 1);
 				{
-				setState(179);
+				setState(231);
 				literal();
 				}
 				break;
 			case IDENTIFIER:
+				enterOuterAlt(_localctx, 2);
 				{
-				setState(180);
+				setState(232);
 				match(IDENTIFIER);
+				setState(238);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if (_la==LPAREN) {
+					{
+					setState(233);
+					match(LPAREN);
+					setState(235);
+					_errHandler.sync(this);
+					_la = _input.LA(1);
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 527938458877952L) != 0)) {
+						{
+						setState(234);
+						argList();
+						}
+					}
+
+					setState(237);
+					match(RPAREN);
+					}
+				}
+
 				}
 				break;
 			case LPAREN:
+				enterOuterAlt(_localctx, 3);
 				{
-				setState(181);
+				setState(240);
 				match(LPAREN);
-				setState(182);
+				setState(241);
 				expression();
-				setState(183);
+				setState(242);
 				match(RPAREN);
+				}
+				break;
+			case LBRACKET:
+				enterOuterAlt(_localctx, 4);
+				{
+				setState(244);
+				arrayLiteral();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArgListContext extends ParserRuleContext {
+		public List<ExpressionContext> expression() {
+			return getRuleContexts(ExpressionContext.class);
+		}
+		public ExpressionContext expression(int i) {
+			return getRuleContext(ExpressionContext.class,i);
+		}
+		public List<TerminalNode> COMMA() { return getTokens(WikangSawaParser.COMMA); }
+		public TerminalNode COMMA(int i) {
+			return getToken(WikangSawaParser.COMMA, i);
+		}
+		public ArgListContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_argList; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitArgList(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ArgListContext argList() throws RecognitionException {
+		ArgListContext _localctx = new ArgListContext(_ctx, getState());
+		enterRule(_localctx, 48, RULE_argList);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(247);
+			expression();
+			setState(252);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(248);
+				match(COMMA);
+				setState(249);
+				expression();
+				}
+				}
+				setState(254);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayLiteralContext extends ParserRuleContext {
+		public TerminalNode LBRACKET() { return getToken(WikangSawaParser.LBRACKET, 0); }
+		public TerminalNode RBRACKET() { return getToken(WikangSawaParser.RBRACKET, 0); }
+		public List<ExpressionContext> expression() {
+			return getRuleContexts(ExpressionContext.class);
+		}
+		public ExpressionContext expression(int i) {
+			return getRuleContext(ExpressionContext.class,i);
+		}
+		public List<TerminalNode> COMMA() { return getTokens(WikangSawaParser.COMMA); }
+		public TerminalNode COMMA(int i) {
+			return getToken(WikangSawaParser.COMMA, i);
+		}
+		public ArrayLiteralContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_arrayLiteral; }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitArrayLiteral(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ArrayLiteralContext arrayLiteral() throws RecognitionException {
+		ArrayLiteralContext _localctx = new ArrayLiteralContext(_ctx, getState());
+		enterRule(_localctx, 50, RULE_arrayLiteral);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(255);
+			match(LBRACKET);
+			setState(264);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 527938458877952L) != 0)) {
+				{
+				setState(256);
+				expression();
+				setState(261);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				while (_la==COMMA) {
+					{
+					{
+					setState(257);
+					match(COMMA);
+					setState(258);
+					expression();
+					}
+					}
+					setState(263);
+					_errHandler.sync(this);
+					_la = _input.LA(1);
+				}
+				}
+			}
+
+			setState(266);
+			match(RBRACKET);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1420,25 +1845,22 @@ public class WikangSawaParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_literal; }
 		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).enterLiteral(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof WikangSawaParserListener ) ((WikangSawaParserListener)listener).exitLiteral(this);
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof WikangSawaParserVisitor ) return ((WikangSawaParserVisitor<? extends T>)visitor).visitLiteral(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final LiteralContext literal() throws RecognitionException {
 		LiteralContext _localctx = new LiteralContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_literal);
+		enterRule(_localctx, 52, RULE_literal);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(187);
+			setState(268);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 61572651384832L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 246290605539328L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -1460,116 +1882,174 @@ public class WikangSawaParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u00011\u00be\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u00013\u010f\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
 		"\f\u0007\f\u0002\r\u0007\r\u0002\u000e\u0007\u000e\u0002\u000f\u0007\u000f"+
 		"\u0002\u0010\u0007\u0010\u0002\u0011\u0007\u0011\u0002\u0012\u0007\u0012"+
-		"\u0002\u0013\u0007\u0013\u0001\u0000\u0005\u0000*\b\u0000\n\u0000\f\u0000"+
-		"-\t\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0003\u0001"+
-		"3\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002"+
-		"\u0001\u0002\u0003\u0002;\b\u0002\u0001\u0003\u0001\u0003\u0001\u0003"+
-		"\u0001\u0003\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
-		"\u0001\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
-		"\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0007\u0005\u0007"+
-		"Q\b\u0007\n\u0007\f\u0007T\t\u0007\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
-		"\b\u0005\b[\b\b\n\b\f\b^\t\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
-		"\b\u0001\b\u0003\bg\b\b\u0003\bi\b\b\u0001\b\u0001\b\u0001\t\u0001\t\u0001"+
-		"\t\u0001\t\u0001\t\u0001\t\u0003\ts\b\t\u0001\n\u0001\n\u0001\n\u0004"+
-		"\nx\b\n\u000b\n\f\ny\u0001\n\u0005\n}\b\n\n\n\f\n\u0080\t\n\u0001\n\u0001"+
-		"\n\u0001\u000b\u0001\u000b\u0001\u000b\u0005\u000b\u0087\b\u000b\n\u000b"+
-		"\f\u000b\u008a\t\u000b\u0001\f\u0001\f\u0001\f\u0005\f\u008f\b\f\n\f\f"+
-		"\f\u0092\t\f\u0001\r\u0001\r\u0001\r\u0003\r\u0097\b\r\u0001\u000e\u0001"+
-		"\u000e\u0001\u000e\u0001\u000e\u0003\u000e\u009d\b\u000e\u0001\u000f\u0001"+
-		"\u000f\u0001\u0010\u0001\u0010\u0001\u0010\u0005\u0010\u00a4\b\u0010\n"+
-		"\u0010\f\u0010\u00a7\t\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0005"+
-		"\u0011\u00ac\b\u0011\n\u0011\f\u0011\u00af\t\u0011\u0001\u0012\u0003\u0012"+
-		"\u00b2\b\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012"+
-		"\u0001\u0012\u0003\u0012\u00ba\b\u0012\u0001\u0013\u0001\u0013\u0001\u0013"+
-		"\u0000\u0000\u0014\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014"+
-		"\u0016\u0018\u001a\u001c\u001e \"$&\u0000\u0005\u0002\u0000\r\r..\u0001"+
-		"\u0000\u0015\u001a\u0001\u0000\u001b\u001c\u0001\u0000\u001d\u001f\u0002"+
-		"\u0000\u000f\u0011+-\u00c0\u0000+\u0001\u0000\u0000\u0000\u00022\u0001"+
-		"\u0000\u0000\u0000\u0004:\u0001\u0000\u0000\u0000\u0006<\u0001\u0000\u0000"+
-		"\u0000\b@\u0001\u0000\u0000\u0000\nF\u0001\u0000\u0000\u0000\fK\u0001"+
-		"\u0000\u0000\u0000\u000eR\u0001\u0000\u0000\u0000\u0010U\u0001\u0000\u0000"+
-		"\u0000\u0012l\u0001\u0000\u0000\u0000\u0014t\u0001\u0000\u0000\u0000\u0016"+
-		"\u0083\u0001\u0000\u0000\u0000\u0018\u008b\u0001\u0000\u0000\u0000\u001a"+
-		"\u0096\u0001\u0000\u0000\u0000\u001c\u0098\u0001\u0000\u0000\u0000\u001e"+
-		"\u009e\u0001\u0000\u0000\u0000 \u00a0\u0001\u0000\u0000\u0000\"\u00a8"+
-		"\u0001\u0000\u0000\u0000$\u00b1\u0001\u0000\u0000\u0000&\u00bb\u0001\u0000"+
-		"\u0000\u0000(*\u0003\u0002\u0001\u0000)(\u0001\u0000\u0000\u0000*-\u0001"+
-		"\u0000\u0000\u0000+)\u0001\u0000\u0000\u0000+,\u0001\u0000\u0000\u0000"+
-		",.\u0001\u0000\u0000\u0000-+\u0001\u0000\u0000\u0000./\u0005\u0000\u0000"+
-		"\u0001/\u0001\u0001\u0000\u0000\u000003\u0003\u0004\u0002\u000013\u0005"+
-		"1\u0000\u000020\u0001\u0000\u0000\u000021\u0001\u0000\u0000\u00003\u0003"+
-		"\u0001\u0000\u0000\u00004;\u0003\u0006\u0003\u00005;\u0003\b\u0004\u0000"+
-		"6;\u0003\n\u0005\u00007;\u0003\f\u0006\u00008;\u0003\u0010\b\u00009;\u0003"+
-		"\u0012\t\u0000:4\u0001\u0000\u0000\u0000:5\u0001\u0000\u0000\u0000:6\u0001"+
-		"\u0000\u0000\u0000:7\u0001\u0000\u0000\u0000:8\u0001\u0000\u0000\u0000"+
-		":9\u0001\u0000\u0000\u0000;\u0005\u0001\u0000\u0000\u0000<=\u0005\u0003"+
-		"\u0000\u0000=>\u0007\u0000\u0000\u0000>?\u00051\u0000\u0000?\u0007\u0001"+
-		"\u0000\u0000\u0000@A\u0005\u0006\u0000\u0000AB\u0005.\u0000\u0000BC\u0005"+
-		" \u0000\u0000CD\u0003\u0016\u000b\u0000DE\u00051\u0000\u0000E\t\u0001"+
-		"\u0000\u0000\u0000FG\u0005.\u0000\u0000GH\u0005 \u0000\u0000HI\u0003\u0016"+
-		"\u000b\u0000IJ\u00051\u0000\u0000J\u000b\u0001\u0000\u0000\u0000KL\u0005"+
-		"\r\u0000\u0000LM\u0003\u0016\u000b\u0000MN\u00051\u0000\u0000N\r\u0001"+
-		"\u0000\u0000\u0000OQ\u00051\u0000\u0000PO\u0001\u0000\u0000\u0000QT\u0001"+
-		"\u0000\u0000\u0000RP\u0001\u0000\u0000\u0000RS\u0001\u0000\u0000\u0000"+
-		"S\u000f\u0001\u0000\u0000\u0000TR\u0001\u0000\u0000\u0000UV\u0005\u0004"+
-		"\u0000\u0000VW\u0003\u0016\u000b\u0000WX\u0005)\u0000\u0000X\\\u0003\u0014"+
-		"\n\u0000Y[\u00051\u0000\u0000ZY\u0001\u0000\u0000\u0000[^\u0001\u0000"+
-		"\u0000\u0000\\Z\u0001\u0000\u0000\u0000\\]\u0001\u0000\u0000\u0000]_\u0001"+
-		"\u0000\u0000\u0000^\\\u0001\u0000\u0000\u0000_h\u0005\u0007\u0000\u0000"+
-		"`a\u0003\u000e\u0007\u0000ab\u0005\n\u0000\u0000bc\u0005)\u0000\u0000"+
-		"cd\u0003\u0014\n\u0000df\u0003\u000e\u0007\u0000eg\u0005\u0007\u0000\u0000"+
-		"fe\u0001\u0000\u0000\u0000fg\u0001\u0000\u0000\u0000gi\u0001\u0000\u0000"+
-		"\u0000h`\u0001\u0000\u0000\u0000hi\u0001\u0000\u0000\u0000ij\u0001\u0000"+
-		"\u0000\u0000jk\u0003\u000e\u0007\u0000k\u0011\u0001\u0000\u0000\u0000"+
-		"lm\u0005\u0005\u0000\u0000mn\u0003\u0016\u000b\u0000no\u0005)\u0000\u0000"+
-		"op\u0003\u0014\n\u0000pr\u0005\u0007\u0000\u0000qs\u00051\u0000\u0000"+
-		"rq\u0001\u0000\u0000\u0000rs\u0001\u0000\u0000\u0000s\u0013\u0001\u0000"+
-		"\u0000\u0000tu\u00051\u0000\u0000uw\u0005\u0001\u0000\u0000vx\u0003\u0004"+
-		"\u0002\u0000wv\u0001\u0000\u0000\u0000xy\u0001\u0000\u0000\u0000yw\u0001"+
-		"\u0000\u0000\u0000yz\u0001\u0000\u0000\u0000z~\u0001\u0000\u0000\u0000"+
-		"{}\u00051\u0000\u0000|{\u0001\u0000\u0000\u0000}\u0080\u0001\u0000\u0000"+
-		"\u0000~|\u0001\u0000\u0000\u0000~\u007f\u0001\u0000\u0000\u0000\u007f"+
-		"\u0081\u0001\u0000\u0000\u0000\u0080~\u0001\u0000\u0000\u0000\u0081\u0082"+
-		"\u0005\u0002\u0000\u0000\u0082\u0015\u0001\u0000\u0000\u0000\u0083\u0088"+
-		"\u0003\u0018\f\u0000\u0084\u0085\u0005\u0013\u0000\u0000\u0085\u0087\u0003"+
-		"\u0018\f\u0000\u0086\u0084\u0001\u0000\u0000\u0000\u0087\u008a\u0001\u0000"+
-		"\u0000\u0000\u0088\u0086\u0001\u0000\u0000\u0000\u0088\u0089\u0001\u0000"+
-		"\u0000\u0000\u0089\u0017\u0001\u0000\u0000\u0000\u008a\u0088\u0001\u0000"+
-		"\u0000\u0000\u008b\u0090\u0003\u001a\r\u0000\u008c\u008d\u0005\u0012\u0000"+
-		"\u0000\u008d\u008f\u0003\u001a\r\u0000\u008e\u008c\u0001\u0000\u0000\u0000"+
-		"\u008f\u0092\u0001\u0000\u0000\u0000\u0090\u008e\u0001\u0000\u0000\u0000"+
-		"\u0090\u0091\u0001\u0000\u0000\u0000\u0091\u0019\u0001\u0000\u0000\u0000"+
-		"\u0092\u0090\u0001\u0000\u0000\u0000\u0093\u0094\u0005\u0014\u0000\u0000"+
-		"\u0094\u0097\u0003\u001a\r\u0000\u0095\u0097\u0003\u001c\u000e\u0000\u0096"+
-		"\u0093\u0001\u0000\u0000\u0000\u0096\u0095\u0001\u0000\u0000\u0000\u0097"+
-		"\u001b\u0001\u0000\u0000\u0000\u0098\u009c\u0003 \u0010\u0000\u0099\u009a"+
-		"\u0003\u001e\u000f\u0000\u009a\u009b\u0003 \u0010\u0000\u009b\u009d\u0001"+
-		"\u0000\u0000\u0000\u009c\u0099\u0001\u0000\u0000\u0000\u009c\u009d\u0001"+
-		"\u0000\u0000\u0000\u009d\u001d\u0001\u0000\u0000\u0000\u009e\u009f\u0007"+
-		"\u0001\u0000\u0000\u009f\u001f\u0001\u0000\u0000\u0000\u00a0\u00a5\u0003"+
-		"\"\u0011\u0000\u00a1\u00a2\u0007\u0002\u0000\u0000\u00a2\u00a4\u0003\""+
-		"\u0011\u0000\u00a3\u00a1\u0001\u0000\u0000\u0000\u00a4\u00a7\u0001\u0000"+
-		"\u0000\u0000\u00a5\u00a3\u0001\u0000\u0000\u0000\u00a5\u00a6\u0001\u0000"+
-		"\u0000\u0000\u00a6!\u0001\u0000\u0000\u0000\u00a7\u00a5\u0001\u0000\u0000"+
-		"\u0000\u00a8\u00ad\u0003$\u0012\u0000\u00a9\u00aa\u0007\u0003\u0000\u0000"+
-		"\u00aa\u00ac\u0003$\u0012\u0000\u00ab\u00a9\u0001\u0000\u0000\u0000\u00ac"+
-		"\u00af\u0001\u0000\u0000\u0000\u00ad\u00ab\u0001\u0000\u0000\u0000\u00ad"+
-		"\u00ae\u0001\u0000\u0000\u0000\u00ae#\u0001\u0000\u0000\u0000\u00af\u00ad"+
-		"\u0001\u0000\u0000\u0000\u00b0\u00b2\u0005\u001c\u0000\u0000\u00b1\u00b0"+
-		"\u0001\u0000\u0000\u0000\u00b1\u00b2\u0001\u0000\u0000\u0000\u00b2\u00b9"+
-		"\u0001\u0000\u0000\u0000\u00b3\u00ba\u0003&\u0013\u0000\u00b4\u00ba\u0005"+
-		".\u0000\u0000\u00b5\u00b6\u0005!\u0000\u0000\u00b6\u00b7\u0003\u0016\u000b"+
-		"\u0000\u00b7\u00b8\u0005\"\u0000\u0000\u00b8\u00ba\u0001\u0000\u0000\u0000"+
-		"\u00b9\u00b3\u0001\u0000\u0000\u0000\u00b9\u00b4\u0001\u0000\u0000\u0000"+
-		"\u00b9\u00b5\u0001\u0000\u0000\u0000\u00ba%\u0001\u0000\u0000\u0000\u00bb"+
-		"\u00bc\u0007\u0004\u0000\u0000\u00bc\'\u0001\u0000\u0000\u0000\u0012+"+
-		"2:R\\fhry~\u0088\u0090\u0096\u009c\u00a5\u00ad\u00b1\u00b9";
+		"\u0002\u0013\u0007\u0013\u0002\u0014\u0007\u0014\u0002\u0015\u0007\u0015"+
+		"\u0002\u0016\u0007\u0016\u0002\u0017\u0007\u0017\u0002\u0018\u0007\u0018"+
+		"\u0002\u0019\u0007\u0019\u0002\u001a\u0007\u001a\u0001\u0000\u0005\u0000"+
+		"8\b\u0000\n\u0000\f\u0000;\t\u0000\u0001\u0000\u0001\u0000\u0001\u0001"+
+		"\u0001\u0001\u0003\u0001A\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002"+
+		"\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0003\u0002"+
+		"K\b\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0003\u0004U\b\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0005"+
+		"\u0001\u0005\u0001\u0005\u0005\u0005`\b\u0005\n\u0005\f\u0005c\t\u0005"+
+		"\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006"+
+		"\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\b\u0001"+
+		"\b\u0001\b\u0001\b\u0001\t\u0001\t\u0001\t\u0001\t\u0001\n\u0005\ny\b"+
+		"\n\n\n\f\n|\t\n\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
+		"\u000b\u0005\u000b\u0083\b\u000b\n\u000b\f\u000b\u0086\t\u000b\u0001\u000b"+
+		"\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b"+
+		"\u0003\u000b\u008f\b\u000b\u0003\u000b\u0091\b\u000b\u0001\u000b\u0001"+
+		"\u000b\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0003\f\u009b\b"+
+		"\f\u0001\r\u0001\r\u0001\r\u0004\r\u00a0\b\r\u000b\r\f\r\u00a1\u0001\r"+
+		"\u0005\r\u00a5\b\r\n\r\f\r\u00a8\t\r\u0001\r\u0001\r\u0001\u000e\u0001"+
+		"\u000e\u0001\u000e\u0005\u000e\u00af\b\u000e\n\u000e\f\u000e\u00b2\t\u000e"+
+		"\u0001\u000f\u0001\u000f\u0001\u000f\u0005\u000f\u00b7\b\u000f\n\u000f"+
+		"\f\u000f\u00ba\t\u000f\u0001\u0010\u0001\u0010\u0001\u0010\u0003\u0010"+
+		"\u00bf\b\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0003\u0011"+
+		"\u00c5\b\u0011\u0001\u0012\u0001\u0012\u0001\u0013\u0001\u0013\u0001\u0013"+
+		"\u0005\u0013\u00cc\b\u0013\n\u0013\f\u0013\u00cf\t\u0013\u0001\u0014\u0001"+
+		"\u0014\u0001\u0014\u0005\u0014\u00d4\b\u0014\n\u0014\f\u0014\u00d7\t\u0014"+
+		"\u0001\u0015\u0003\u0015\u00da\b\u0015\u0001\u0015\u0001\u0015\u0001\u0016"+
+		"\u0001\u0016\u0001\u0016\u0001\u0016\u0001\u0016\u0005\u0016\u00e3\b\u0016"+
+		"\n\u0016\f\u0016\u00e6\t\u0016\u0001\u0017\u0001\u0017\u0001\u0017\u0001"+
+		"\u0017\u0003\u0017\u00ec\b\u0017\u0001\u0017\u0003\u0017\u00ef\b\u0017"+
+		"\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0003\u0017"+
+		"\u00f6\b\u0017\u0001\u0018\u0001\u0018\u0001\u0018\u0005\u0018\u00fb\b"+
+		"\u0018\n\u0018\f\u0018\u00fe\t\u0018\u0001\u0019\u0001\u0019\u0001\u0019"+
+		"\u0001\u0019\u0005\u0019\u0104\b\u0019\n\u0019\f\u0019\u0107\t\u0019\u0003"+
+		"\u0019\u0109\b\u0019\u0001\u0019\u0001\u0019\u0001\u001a\u0001\u001a\u0001"+
+		"\u001a\u0000\u0000\u001b\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012"+
+		"\u0014\u0016\u0018\u001a\u001c\u001e \"$&(*,.024\u0000\u0005\u0002\u0000"+
+		"\u000f\u000f00\u0001\u0000\u0017\u001c\u0001\u0000\u001d\u001e\u0001\u0000"+
+		"\u001f!\u0002\u0000\u0011\u0013-/\u0115\u00009\u0001\u0000\u0000\u0000"+
+		"\u0002@\u0001\u0000\u0000\u0000\u0004J\u0001\u0000\u0000\u0000\u0006L"+
+		"\u0001\u0000\u0000\u0000\bP\u0001\u0000\u0000\u0000\n\\\u0001\u0000\u0000"+
+		"\u0000\fd\u0001\u0000\u0000\u0000\u000ej\u0001\u0000\u0000\u0000\u0010"+
+		"o\u0001\u0000\u0000\u0000\u0012s\u0001\u0000\u0000\u0000\u0014z\u0001"+
+		"\u0000\u0000\u0000\u0016}\u0001\u0000\u0000\u0000\u0018\u0094\u0001\u0000"+
+		"\u0000\u0000\u001a\u009c\u0001\u0000\u0000\u0000\u001c\u00ab\u0001\u0000"+
+		"\u0000\u0000\u001e\u00b3\u0001\u0000\u0000\u0000 \u00be\u0001\u0000\u0000"+
+		"\u0000\"\u00c0\u0001\u0000\u0000\u0000$\u00c6\u0001\u0000\u0000\u0000"+
+		"&\u00c8\u0001\u0000\u0000\u0000(\u00d0\u0001\u0000\u0000\u0000*\u00d9"+
+		"\u0001\u0000\u0000\u0000,\u00dd\u0001\u0000\u0000\u0000.\u00f5\u0001\u0000"+
+		"\u0000\u00000\u00f7\u0001\u0000\u0000\u00002\u00ff\u0001\u0000\u0000\u0000"+
+		"4\u010c\u0001\u0000\u0000\u000068\u0003\u0002\u0001\u000076\u0001\u0000"+
+		"\u0000\u00008;\u0001\u0000\u0000\u000097\u0001\u0000\u0000\u00009:\u0001"+
+		"\u0000\u0000\u0000:<\u0001\u0000\u0000\u0000;9\u0001\u0000\u0000\u0000"+
+		"<=\u0005\u0000\u0000\u0001=\u0001\u0001\u0000\u0000\u0000>A\u0003\u0004"+
+		"\u0002\u0000?A\u00053\u0000\u0000@>\u0001\u0000\u0000\u0000@?\u0001\u0000"+
+		"\u0000\u0000A\u0003\u0001\u0000\u0000\u0000BK\u0003\u0006\u0003\u0000"+
+		"CK\u0003\b\u0004\u0000DK\u0003\f\u0006\u0000EK\u0003\u000e\u0007\u0000"+
+		"FK\u0003\u0010\b\u0000GK\u0003\u0012\t\u0000HK\u0003\u0016\u000b\u0000"+
+		"IK\u0003\u0018\f\u0000JB\u0001\u0000\u0000\u0000JC\u0001\u0000\u0000\u0000"+
+		"JD\u0001\u0000\u0000\u0000JE\u0001\u0000\u0000\u0000JF\u0001\u0000\u0000"+
+		"\u0000JG\u0001\u0000\u0000\u0000JH\u0001\u0000\u0000\u0000JI\u0001\u0000"+
+		"\u0000\u0000K\u0005\u0001\u0000\u0000\u0000LM\u0005\u0003\u0000\u0000"+
+		"MN\u0007\u0000\u0000\u0000NO\u00053\u0000\u0000O\u0007\u0001\u0000\u0000"+
+		"\u0000PQ\u0005\u0004\u0000\u0000QR\u00050\u0000\u0000RT\u0005#\u0000\u0000"+
+		"SU\u0003\n\u0005\u0000TS\u0001\u0000\u0000\u0000TU\u0001\u0000\u0000\u0000"+
+		"UV\u0001\u0000\u0000\u0000VW\u0005$\u0000\u0000WX\u0005+\u0000\u0000X"+
+		"Y\u0003\u001a\r\u0000YZ\u0005\t\u0000\u0000Z[\u0003\u0014\n\u0000[\t\u0001"+
+		"\u0000\u0000\u0000\\a\u00050\u0000\u0000]^\u0005)\u0000\u0000^`\u0005"+
+		"0\u0000\u0000_]\u0001\u0000\u0000\u0000`c\u0001\u0000\u0000\u0000a_\u0001"+
+		"\u0000\u0000\u0000ab\u0001\u0000\u0000\u0000b\u000b\u0001\u0000\u0000"+
+		"\u0000ca\u0001\u0000\u0000\u0000de\u0005\b\u0000\u0000ef\u00050\u0000"+
+		"\u0000fg\u0005\"\u0000\u0000gh\u0003\u001c\u000e\u0000hi\u00053\u0000"+
+		"\u0000i\r\u0001\u0000\u0000\u0000jk\u00050\u0000\u0000kl\u0005\"\u0000"+
+		"\u0000lm\u0003\u001c\u000e\u0000mn\u00053\u0000\u0000n\u000f\u0001\u0000"+
+		"\u0000\u0000op\u0005\u000f\u0000\u0000pq\u0003\u001c\u000e\u0000qr\u0005"+
+		"3\u0000\u0000r\u0011\u0001\u0000\u0000\u0000st\u0005\u0005\u0000\u0000"+
+		"tu\u0003\u001c\u000e\u0000uv\u00053\u0000\u0000v\u0013\u0001\u0000\u0000"+
+		"\u0000wy\u00053\u0000\u0000xw\u0001\u0000\u0000\u0000y|\u0001\u0000\u0000"+
+		"\u0000zx\u0001\u0000\u0000\u0000z{\u0001\u0000\u0000\u0000{\u0015\u0001"+
+		"\u0000\u0000\u0000|z\u0001\u0000\u0000\u0000}~\u0005\u0006\u0000\u0000"+
+		"~\u007f\u0003\u001c\u000e\u0000\u007f\u0080\u0005+\u0000\u0000\u0080\u0084"+
+		"\u0003\u001a\r\u0000\u0081\u0083\u00053\u0000\u0000\u0082\u0081\u0001"+
+		"\u0000\u0000\u0000\u0083\u0086\u0001\u0000\u0000\u0000\u0084\u0082\u0001"+
+		"\u0000\u0000\u0000\u0084\u0085\u0001\u0000\u0000\u0000\u0085\u0087\u0001"+
+		"\u0000\u0000\u0000\u0086\u0084\u0001\u0000\u0000\u0000\u0087\u0090\u0005"+
+		"\t\u0000\u0000\u0088\u0089\u0003\u0014\n\u0000\u0089\u008a\u0005\f\u0000"+
+		"\u0000\u008a\u008b\u0005+\u0000\u0000\u008b\u008c\u0003\u001a\r\u0000"+
+		"\u008c\u008e\u0003\u0014\n\u0000\u008d\u008f\u0005\t\u0000\u0000\u008e"+
+		"\u008d\u0001\u0000\u0000\u0000\u008e\u008f\u0001\u0000\u0000\u0000\u008f"+
+		"\u0091\u0001\u0000\u0000\u0000\u0090\u0088\u0001\u0000\u0000\u0000\u0090"+
+		"\u0091\u0001\u0000\u0000\u0000\u0091\u0092\u0001\u0000\u0000\u0000\u0092"+
+		"\u0093\u0003\u0014\n\u0000\u0093\u0017\u0001\u0000\u0000\u0000\u0094\u0095"+
+		"\u0005\u0007\u0000\u0000\u0095\u0096\u0003\u001c\u000e\u0000\u0096\u0097"+
+		"\u0005+\u0000\u0000\u0097\u0098\u0003\u001a\r\u0000\u0098\u009a\u0005"+
+		"\t\u0000\u0000\u0099\u009b\u00053\u0000\u0000\u009a\u0099\u0001\u0000"+
+		"\u0000\u0000\u009a\u009b\u0001\u0000\u0000\u0000\u009b\u0019\u0001\u0000"+
+		"\u0000\u0000\u009c\u009d\u00053\u0000\u0000\u009d\u009f\u0005\u0001\u0000"+
+		"\u0000\u009e\u00a0\u0003\u0004\u0002\u0000\u009f\u009e\u0001\u0000\u0000"+
+		"\u0000\u00a0\u00a1\u0001\u0000\u0000\u0000\u00a1\u009f\u0001\u0000\u0000"+
+		"\u0000\u00a1\u00a2\u0001\u0000\u0000\u0000\u00a2\u00a6\u0001\u0000\u0000"+
+		"\u0000\u00a3\u00a5\u00053\u0000\u0000\u00a4\u00a3\u0001\u0000\u0000\u0000"+
+		"\u00a5\u00a8\u0001\u0000\u0000\u0000\u00a6\u00a4\u0001\u0000\u0000\u0000"+
+		"\u00a6\u00a7\u0001\u0000\u0000\u0000\u00a7\u00a9\u0001\u0000\u0000\u0000"+
+		"\u00a8\u00a6\u0001\u0000\u0000\u0000\u00a9\u00aa\u0005\u0002\u0000\u0000"+
+		"\u00aa\u001b\u0001\u0000\u0000\u0000\u00ab\u00b0\u0003\u001e\u000f\u0000"+
+		"\u00ac\u00ad\u0005\u0015\u0000\u0000\u00ad\u00af\u0003\u001e\u000f\u0000"+
+		"\u00ae\u00ac\u0001\u0000\u0000\u0000\u00af\u00b2\u0001\u0000\u0000\u0000"+
+		"\u00b0\u00ae\u0001\u0000\u0000\u0000\u00b0\u00b1\u0001\u0000\u0000\u0000"+
+		"\u00b1\u001d\u0001\u0000\u0000\u0000\u00b2\u00b0\u0001\u0000\u0000\u0000"+
+		"\u00b3\u00b8\u0003 \u0010\u0000\u00b4\u00b5\u0005\u0014\u0000\u0000\u00b5"+
+		"\u00b7\u0003 \u0010\u0000\u00b6\u00b4\u0001\u0000\u0000\u0000\u00b7\u00ba"+
+		"\u0001\u0000\u0000\u0000\u00b8\u00b6\u0001\u0000\u0000\u0000\u00b8\u00b9"+
+		"\u0001\u0000\u0000\u0000\u00b9\u001f\u0001\u0000\u0000\u0000\u00ba\u00b8"+
+		"\u0001\u0000\u0000\u0000\u00bb\u00bc\u0005\u0016\u0000\u0000\u00bc\u00bf"+
+		"\u0003 \u0010\u0000\u00bd\u00bf\u0003\"\u0011\u0000\u00be\u00bb\u0001"+
+		"\u0000\u0000\u0000\u00be\u00bd\u0001\u0000\u0000\u0000\u00bf!\u0001\u0000"+
+		"\u0000\u0000\u00c0\u00c4\u0003&\u0013\u0000\u00c1\u00c2\u0003$\u0012\u0000"+
+		"\u00c2\u00c3\u0003&\u0013\u0000\u00c3\u00c5\u0001\u0000\u0000\u0000\u00c4"+
+		"\u00c1\u0001\u0000\u0000\u0000\u00c4\u00c5\u0001\u0000\u0000\u0000\u00c5"+
+		"#\u0001\u0000\u0000\u0000\u00c6\u00c7\u0007\u0001\u0000\u0000\u00c7%\u0001"+
+		"\u0000\u0000\u0000\u00c8\u00cd\u0003(\u0014\u0000\u00c9\u00ca\u0007\u0002"+
+		"\u0000\u0000\u00ca\u00cc\u0003(\u0014\u0000\u00cb\u00c9\u0001\u0000\u0000"+
+		"\u0000\u00cc\u00cf\u0001\u0000\u0000\u0000\u00cd\u00cb\u0001\u0000\u0000"+
+		"\u0000\u00cd\u00ce\u0001\u0000\u0000\u0000\u00ce\'\u0001\u0000\u0000\u0000"+
+		"\u00cf\u00cd\u0001\u0000\u0000\u0000\u00d0\u00d5\u0003*\u0015\u0000\u00d1"+
+		"\u00d2\u0007\u0003\u0000\u0000\u00d2\u00d4\u0003*\u0015\u0000\u00d3\u00d1"+
+		"\u0001\u0000\u0000\u0000\u00d4\u00d7\u0001\u0000\u0000\u0000\u00d5\u00d3"+
+		"\u0001\u0000\u0000\u0000\u00d5\u00d6\u0001\u0000\u0000\u0000\u00d6)\u0001"+
+		"\u0000\u0000\u0000\u00d7\u00d5\u0001\u0000\u0000\u0000\u00d8\u00da\u0005"+
+		"\u001e\u0000\u0000\u00d9\u00d8\u0001\u0000\u0000\u0000\u00d9\u00da\u0001"+
+		"\u0000\u0000\u0000\u00da\u00db\u0001\u0000\u0000\u0000\u00db\u00dc\u0003"+
+		",\u0016\u0000\u00dc+\u0001\u0000\u0000\u0000\u00dd\u00e4\u0003.\u0017"+
+		"\u0000\u00de\u00df\u0005%\u0000\u0000\u00df\u00e0\u0003\u001c\u000e\u0000"+
+		"\u00e0\u00e1\u0005&\u0000\u0000\u00e1\u00e3\u0001\u0000\u0000\u0000\u00e2"+
+		"\u00de\u0001\u0000\u0000\u0000\u00e3\u00e6\u0001\u0000\u0000\u0000\u00e4"+
+		"\u00e2\u0001\u0000\u0000\u0000\u00e4\u00e5\u0001\u0000\u0000\u0000\u00e5"+
+		"-\u0001\u0000\u0000\u0000\u00e6\u00e4\u0001\u0000\u0000\u0000\u00e7\u00f6"+
+		"\u00034\u001a\u0000\u00e8\u00ee\u00050\u0000\u0000\u00e9\u00eb\u0005#"+
+		"\u0000\u0000\u00ea\u00ec\u00030\u0018\u0000\u00eb\u00ea\u0001\u0000\u0000"+
+		"\u0000\u00eb\u00ec\u0001\u0000\u0000\u0000\u00ec\u00ed\u0001\u0000\u0000"+
+		"\u0000\u00ed\u00ef\u0005$\u0000\u0000\u00ee\u00e9\u0001\u0000\u0000\u0000"+
+		"\u00ee\u00ef\u0001\u0000\u0000\u0000\u00ef\u00f6\u0001\u0000\u0000\u0000"+
+		"\u00f0\u00f1\u0005#\u0000\u0000\u00f1\u00f2\u0003\u001c\u000e\u0000\u00f2"+
+		"\u00f3\u0005$\u0000\u0000\u00f3\u00f6\u0001\u0000\u0000\u0000\u00f4\u00f6"+
+		"\u00032\u0019\u0000\u00f5\u00e7\u0001\u0000\u0000\u0000\u00f5\u00e8\u0001"+
+		"\u0000\u0000\u0000\u00f5\u00f0\u0001\u0000\u0000\u0000\u00f5\u00f4\u0001"+
+		"\u0000\u0000\u0000\u00f6/\u0001\u0000\u0000\u0000\u00f7\u00fc\u0003\u001c"+
+		"\u000e\u0000\u00f8\u00f9\u0005)\u0000\u0000\u00f9\u00fb\u0003\u001c\u000e"+
+		"\u0000\u00fa\u00f8\u0001\u0000\u0000\u0000\u00fb\u00fe\u0001\u0000\u0000"+
+		"\u0000\u00fc\u00fa\u0001\u0000\u0000\u0000\u00fc\u00fd\u0001\u0000\u0000"+
+		"\u0000\u00fd1\u0001\u0000\u0000\u0000\u00fe\u00fc\u0001\u0000\u0000\u0000"+
+		"\u00ff\u0108\u0005%\u0000\u0000\u0100\u0105\u0003\u001c\u000e\u0000\u0101"+
+		"\u0102\u0005)\u0000\u0000\u0102\u0104\u0003\u001c\u000e\u0000\u0103\u0101"+
+		"\u0001\u0000\u0000\u0000\u0104\u0107\u0001\u0000\u0000\u0000\u0105\u0103"+
+		"\u0001\u0000\u0000\u0000\u0105\u0106\u0001\u0000\u0000\u0000\u0106\u0109"+
+		"\u0001\u0000\u0000\u0000\u0107\u0105\u0001\u0000\u0000\u0000\u0108\u0100"+
+		"\u0001\u0000\u0000\u0000\u0108\u0109\u0001\u0000\u0000\u0000\u0109\u010a"+
+		"\u0001\u0000\u0000\u0000\u010a\u010b\u0005&\u0000\u0000\u010b3\u0001\u0000"+
+		"\u0000\u0000\u010c\u010d\u0007\u0004\u0000\u0000\u010d5\u0001\u0000\u0000"+
+		"\u0000\u001a9@JTaz\u0084\u008e\u0090\u009a\u00a1\u00a6\u00b0\u00b8\u00be"+
+		"\u00c4\u00cd\u00d5\u00d9\u00e4\u00eb\u00ee\u00f5\u00fc\u0105\u0108";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

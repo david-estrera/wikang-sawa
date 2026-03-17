@@ -173,10 +173,24 @@ public class ConstructRecognizer extends WikangSawaParserBaseVisitor<Void> {
 
     @Override
     public Void visitFactor(WikangSawaParser.FactorContext ctx) {
-        if (ctx.literal() != null) {
-            System.out.println(indent() + "        (literal: " + ctx.literal().getText() + ")");
-        } else if (ctx.IDENTIFIER() != null) {
-            System.out.println(indent() + "        (identifier: " + ctx.IDENTIFIER().getText() + ")");
+        // factor: (MINUS)? postfix
+        WikangSawaParser.PostfixContext post = ctx.postfix();
+        if (post != null && post.primary() != null) {
+            WikangSawaParser.PrimaryContext p = post.primary();
+            if (p.literal() != null) {
+                System.out.println(indent() + "        (literal: " + p.literal().getText() + ")");
+            } else if (p.arrayLiteral() != null) {
+                System.out.println(indent() + "        (array literal)");
+            } else if (p.IDENTIFIER() != null) {
+                if (p.LPAREN() != null) {
+                    System.out.println(indent() + "        (function call: " + p.IDENTIFIER().getText() + "())");
+                } else {
+                    System.out.println(indent() + "        (identifier: " + p.IDENTIFIER().getText() + ")");
+                }
+            }
+            if (post.expression() != null && post.expression().size() > 0) {
+                System.out.println(indent() + "        (indexing: " + post.expression().size() + " index(es))");
+            }
         }
         return visitChildren(ctx);
     }

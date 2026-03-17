@@ -1,0 +1,7 @@
+# PASS: Simple assignment
+
+gamitin magpakita
+baryabol x = 1
+x = 2
+magpakita x
+

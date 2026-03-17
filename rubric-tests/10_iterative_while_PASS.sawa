@@ -1,0 +1,9 @@
+# PASS: Iterative loop (habang / while)
+
+gamitin magpakita
+baryabol counter = 1
+habang counter <= 3:
+    magpakita counter
+    counter = counter + 1
+tapos
+

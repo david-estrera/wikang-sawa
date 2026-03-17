@@ -1,0 +1,19 @@
+# PASS: Boolean + logical expressions (simple + complex)
+
+gamitin magpakita
+baryabol a = 10
+baryabol b = 20
+baryabol isOk = totoo
+
+kung isOk at a < b:
+    magpakita "AND ok"
+tapos
+
+kung isOk o a > b:
+    magpakita "OR ok"
+tapos
+
+kung hindi (a > b o mali):
+    magpakita "NOT + parentheses ok"
+tapos
+

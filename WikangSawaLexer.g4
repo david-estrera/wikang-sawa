@@ -66,6 +66,8 @@ tokens {
 
 // Keywords (must come before IDENTIFIER)
 GAMITIN : 'gamitin';
+PUNSYON : 'punsyon';
+BALIK : 'balik';
 KUNG : 'kung';
 HABANG : 'habang';
 BARYABOL : 'baryabol';

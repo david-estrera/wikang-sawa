@@ -23,6 +23,8 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	T visitStatement(WikangSawaParser.StatementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#blockStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
 	 */
 	T visitBlockStatement(WikangSawaParser.BlockStatementContext ctx);
 	/**
@@ -31,6 +33,18 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitImportStatement(WikangSawaParser.ImportStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#functionDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionDeclaration(WikangSawaParser.FunctionDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#paramList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParamList(WikangSawaParser.ParamListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#variableDeclaration}.
 	 * @param ctx the parse tree
@@ -49,6 +63,18 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPrintStatement(WikangSawaParser.PrintStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#returnStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReturnStatement(WikangSawaParser.ReturnStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#optionalNewlines}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOptionalNewlines(WikangSawaParser.OptionalNewlinesContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#conditionalStatement}.
 	 * @param ctx the parse tree
@@ -115,6 +141,30 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFactor(WikangSawaParser.FactorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#postfix}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPostfix(WikangSawaParser.PostfixContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimary(WikangSawaParser.PrimaryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#argList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArgList(WikangSawaParser.ArgListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#arrayLiteral}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayLiteral(WikangSawaParser.ArrayLiteralContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#literal}.
 	 * @param ctx the parse tree

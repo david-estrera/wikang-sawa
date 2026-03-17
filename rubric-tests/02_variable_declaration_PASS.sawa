@@ -1,0 +1,12 @@
+# PASS: Variable declaration
+
+gamitin magpakita
+baryabol a = 10
+baryabol b = 5.5
+baryabol s = "hi"
+baryabol ok = totoo
+magpakita a
+magpakita b
+magpakita s
+magpakita ok
+

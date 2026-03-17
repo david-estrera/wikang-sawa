@@ -1,0 +1,14 @@
+# PASS: Function declaration + calling + variable scope (parameter shadows global)
+
+gamitin magpakita
+
+baryabol x = 100
+
+punsyon f(x):
+    # parameter x shadows global x inside function
+    balik x + 1
+tapos
+
+magpakita f(5)     # prints 6
+magpakita x        # prints 100 (global unchanged)
+

@@ -1,0 +1,6 @@
+# SEMANTIC-FAIL: Uses an undeclared variable in an expression.
+# Parses, but SemanticAnalyzer should reject and interpreter should be skipped.
+
+gamitin magpakita
+magpakita x + 1
+

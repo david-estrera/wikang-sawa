@@ -1,0 +1,8 @@
+# INTERPRETER-FAIL: Array index out of bounds at runtime.
+# Parses and passes semantic checks (we don't prove bounds statically),
+# but interpreter should throw a runtime error and stop.
+
+gamitin magpakita
+baryabol a = [1, 2, 3]
+magpakita a[10]
+

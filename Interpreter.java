@@ -1,9 +1,14 @@
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.antlr.v4.runtime.Token;
 
 public class Interpreter {
-    private final Map<String, RuntimeValue> env = new LinkedHashMap<>();
+    private final Map<String, FunctionDef> functions = new LinkedHashMap<>();
+    private final Deque<Map<String, RuntimeValue>> envStack = new ArrayDeque<>();
     private final int maxLoopIterations;
 
     public Interpreter() {
@@ -12,9 +17,17 @@ public class Interpreter {
 
     public Interpreter(int maxLoopIterations) {
         this.maxLoopIterations = maxLoopIterations;
+        this.envStack.push(new LinkedHashMap<>()); // global frame
     }
 
     public void execute(WikangSawaParser.ProgramContext program) {
+        // First pass: collect function declarations (so recursion works regardless of order)
+        for (WikangSawaParser.StatementContext st : program.statement()) {
+            if (st.blockStatement() != null && st.blockStatement().functionDeclaration() != null) {
+                registerFunction(st.blockStatement().functionDeclaration());
+            }
+        }
+
         for (WikangSawaParser.StatementContext st : program.statement()) {
             if (st.blockStatement() != null) {
                 executeBlockStatement(st.blockStatement());
@@ -33,6 +46,10 @@ public class Interpreter {
             // No-op for now (no module system implemented)
             return;
         }
+        if (bs.functionDeclaration() != null) {
+            // Already registered in the first pass. No-op at runtime.
+            return;
+        }
         if (bs.variableDeclaration() != null) {
             execVarDecl(bs.variableDeclaration());
             return;
@@ -44,6 +61,10 @@ public class Interpreter {
         if (bs.printStatement() != null) {
             execPrint(bs.printStatement());
             return;
+        }
+        if (bs.returnStatement() != null) {
+            RuntimeValue v = evalExpression(bs.returnStatement().expression());
+            throw new ReturnSignal(v);
         }
         if (bs.conditionalStatement() != null) {
             execIf(bs.conditionalStatement());
@@ -58,19 +79,20 @@ public class Interpreter {
         String name = ctx.IDENTIFIER().getText();
         RuntimeValue value = evalExpression(ctx.expression());
         // Keep interpreter strict and simple: treat redeclare as runtime error.
-        if (env.containsKey(name)) {
+        if (currentEnv().containsKey(name)) {
             throw new InterpreterException(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is already declared.");
         }
-        env.put(name, value);
+        currentEnv().put(name, value);
     }
 
     private void execAssign(WikangSawaParser.AssignmentStatementContext ctx) {
         String name = ctx.IDENTIFIER().getText();
-        if (!env.containsKey(name)) {
+        if (!lookupEnv(name).exists) {
             throw new InterpreterException(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is not declared (cannot assign).");
         }
         RuntimeValue value = evalExpression(ctx.expression());
-        env.put(name, value);
+        // Assign into nearest scope where declared.
+        lookupEnv(name).frame.put(name, value);
     }
 
     private void execPrint(WikangSawaParser.PrintStatementContext ctx) {
@@ -185,21 +207,7 @@ public class Interpreter {
     }
 
     private RuntimeValue evalFactor(WikangSawaParser.FactorContext ctx) {
-        RuntimeValue base;
-        if (ctx.literal() != null) {
-            base = evalLiteral(ctx.literal());
-        } else if (ctx.IDENTIFIER() != null) {
-            String name = ctx.IDENTIFIER().getText();
-            RuntimeValue v = env.get(name);
-            if (v == null) {
-                throw new InterpreterException(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is not declared.");
-            }
-            base = v;
-        } else {
-            // ( expression )
-            base = evalExpression(ctx.expression());
-        }
-
+        RuntimeValue base = evalPostfix(ctx.postfix());
         if (ctx.MINUS() != null) {
             if (!base.isNumeric()) {
                 throw new InterpreterException(ctx.getStart(), "Unary '-' requires a numeric operand, got " + base.type + ".");
@@ -208,6 +216,61 @@ public class Interpreter {
             return RuntimeValue.number(-base.asLong());
         }
         return base;
+    }
+
+    private RuntimeValue evalPostfix(WikangSawaParser.PostfixContext ctx) {
+        RuntimeValue base = evalPrimary(ctx.primary());
+        // Apply indexing: primary ('[' expression ']')*
+        for (int i = 0; i < ctx.expression().size(); i++) {
+            RuntimeValue idxV = evalExpression(ctx.expression(i));
+            if (!idxV.isNumeric()) {
+                throw new InterpreterException(ctx.getStart(), "Array index must be numeric.");
+            }
+            int idx = (int) idxV.asDouble();
+            if (base.type != RuntimeValue.Type.ARRAY) {
+                throw new InterpreterException(ctx.getStart(), "Indexing requires an array, got " + base.type + ".");
+            }
+            List<RuntimeValue> arr = base.asArray();
+            if (idx < 0 || idx >= arr.size()) {
+                throw new InterpreterException(ctx.getStart(), "Array index out of bounds: " + idx + ".");
+            }
+            base = arr.get(idx);
+        }
+        return base;
+    }
+
+    private RuntimeValue evalPrimary(WikangSawaParser.PrimaryContext ctx) {
+        if (ctx.literal() != null) return evalLiteral(ctx.literal());
+        if (ctx.arrayLiteral() != null) return evalArrayLiteral(ctx.arrayLiteral());
+        if (ctx.expression() != null) return evalExpression(ctx.expression()); // parenthesized
+
+        // IDENTIFIER ( '(' argList? ')' )?
+        if (ctx.IDENTIFIER() != null) {
+            String name = ctx.IDENTIFIER().getText();
+            if (ctx.LPAREN() != null) {
+                // function call
+                List<RuntimeValue> args = new ArrayList<>();
+                if (ctx.argList() != null) {
+                    for (WikangSawaParser.ExpressionContext e : ctx.argList().expression()) {
+                        args.add(evalExpression(e));
+                    }
+                }
+                return callFunction(ctx.getStart(), name, args);
+            }
+            RuntimeValue v = lookupValue(name);
+            if (v == null) throw new InterpreterException(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is not declared.");
+            return v;
+        }
+
+        throw new InterpreterException(ctx.getStart(), "Unknown primary expression.");
+    }
+
+    private RuntimeValue evalArrayLiteral(WikangSawaParser.ArrayLiteralContext ctx) {
+        List<RuntimeValue> values = new ArrayList<>();
+        for (WikangSawaParser.ExpressionContext e : ctx.expression()) {
+            values.add(evalExpression(e));
+        }
+        return RuntimeValue.array(values);
     }
 
     private RuntimeValue evalLiteral(WikangSawaParser.LiteralContext ctx) {
@@ -332,6 +395,85 @@ public class Interpreter {
             }
         }
         return out.toString();
+    }
+
+    // ===== Functions / recursion =====
+
+    private static final class FunctionDef {
+        final List<String> params;
+        final WikangSawaParser.BlockContext body;
+
+        FunctionDef(List<String> params, WikangSawaParser.BlockContext body) {
+            this.params = params;
+            this.body = body;
+        }
+    }
+
+    private static final class ReturnSignal extends RuntimeException {
+        final RuntimeValue value;
+        ReturnSignal(RuntimeValue value) { this.value = value; }
+    }
+
+    private void registerFunction(WikangSawaParser.FunctionDeclarationContext ctx) {
+        String name = ctx.IDENTIFIER().getText();
+        List<String> params = new ArrayList<>();
+        if (ctx.paramList() != null) {
+            for (var id : ctx.paramList().IDENTIFIER()) {
+                params.add(id.getText());
+            }
+        }
+        functions.put(name, new FunctionDef(params, ctx.block()));
+    }
+
+    private RuntimeValue callFunction(Token where, String name, List<RuntimeValue> args) {
+        FunctionDef def = functions.get(name);
+        if (def == null) {
+            throw new InterpreterException(where, "Function '" + name + "' is not declared.");
+        }
+        if (args.size() != def.params.size()) {
+            throw new InterpreterException(where, "Function '" + name + "' expects " + def.params.size() + " argument(s), got " + args.size() + ".");
+        }
+
+        Map<String, RuntimeValue> frame = new LinkedHashMap<>();
+        for (int i = 0; i < def.params.size(); i++) {
+            frame.put(def.params.get(i), args.get(i));
+        }
+        envStack.push(frame);
+        try {
+            executeBlock(def.body);
+            return RuntimeValue.nullValue();
+        } catch (ReturnSignal rs) {
+            return rs.value;
+        } finally {
+            envStack.pop();
+        }
+    }
+
+    private Map<String, RuntimeValue> currentEnv() {
+        return envStack.peek();
+    }
+
+    private static final class Lookup {
+        final boolean exists;
+        final Map<String, RuntimeValue> frame;
+        Lookup(boolean exists, Map<String, RuntimeValue> frame) {
+            this.exists = exists;
+            this.frame = frame;
+        }
+    }
+
+    private Lookup lookupEnv(String name) {
+        for (Map<String, RuntimeValue> frame : envStack) {
+            if (frame.containsKey(name)) return new Lookup(true, frame);
+        }
+        return new Lookup(false, null);
+    }
+
+    private RuntimeValue lookupValue(String name) {
+        for (Map<String, RuntimeValue> frame : envStack) {
+            if (frame.containsKey(name)) return frame.get(name);
+        }
+        return null;
     }
 }
 

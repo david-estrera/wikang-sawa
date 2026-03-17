@@ -1,0 +1,6 @@
+# PARSE-FAIL: Constant declaration is not implemented in grammar/interpreter.
+# Hypothetical syntax (example): konstant x = 10
+
+konstant x = 10
+magpakita x
+

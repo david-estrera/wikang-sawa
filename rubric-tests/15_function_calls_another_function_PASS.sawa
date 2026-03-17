@@ -1,0 +1,15 @@
+# PASS: Function calling another function, call multiple times
+
+gamitin magpakita
+
+punsyon inc(x):
+    balik x + 1
+tapos
+
+punsyon twiceInc(x):
+    balik inc(inc(x))
+tapos
+
+magpakita twiceInc(10)  # 12
+magpakita twiceInc(0)   # 2
+

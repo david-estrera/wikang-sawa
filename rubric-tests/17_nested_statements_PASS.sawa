@@ -1,0 +1,14 @@
+# PASS: Nested statements (if inside loop)
+
+gamitin magpakita
+baryabol i = 1
+habang i <= 5:
+    kung i % 2 == 0:
+        magpakita "even"
+    tapos
+    kundi:
+        magpakita "odd"
+    tapos
+    i = i + 1
+tapos
+
