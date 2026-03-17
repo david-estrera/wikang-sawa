@@ -1,0 +1,8 @@
+# INTERPRETER-FAIL: Indexing a non-array value.
+# Parses and passes semantic checks (we don't enforce this statically),
+# but interpreter should throw a runtime error and stop.
+
+gamitin magpakita
+baryabol x = 10
+magpakita x[0]
+

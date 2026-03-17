@@ -1,5 +1,5 @@
-# PASS: Comments/headers are ignored by lexer.
-# This file demonstrates that comments don't break parsing/execution.
+# PASS: Comments are ignored by lexer.
+# demonstrates that comments don't break parsing/execution.
 
 gamitin magpakita
 

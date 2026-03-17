@@ -1,0 +1,9 @@
+# SEMANTIC-FAIL: Type mismatch in arithmetic (string * number).
+# Parses, but SemanticAnalyzer should reject; interpreter should be skipped.
+
+gamitin magpakita
+
+baryabol s = "hi"
+baryabol bad = s * 2
+magpakita bad
+

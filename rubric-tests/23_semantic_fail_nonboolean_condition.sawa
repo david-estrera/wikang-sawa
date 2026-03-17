@@ -1,0 +1,9 @@
+# SEMANTIC-FAIL: Non-boolean condition in 'kung'.
+# Parses, but SemanticAnalyzer should reject; interpreter should be skipped.
+
+gamitin magpakita
+
+kung 123:
+    magpakita "hindi boolean ang condition"
+tapos
+

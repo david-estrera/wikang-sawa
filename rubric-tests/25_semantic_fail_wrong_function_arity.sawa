@@ -1,0 +1,12 @@
+# SEMANTIC-FAIL: Wrong number of arguments in a function call.
+# Parses, but SemanticAnalyzer should reject; interpreter should be skipped.
+
+gamitin magpakita
+
+punsyon add(a, b):
+    balik a + b
+tapos
+
+magpakita add(1)       # missing one arg
+magpakita add(1, 2, 3) # too many args
+
