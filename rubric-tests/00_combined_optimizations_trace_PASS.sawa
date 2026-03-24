@@ -1,0 +1,48 @@
+# PASS: Combined optimization-focused trace demo.
+# Main observable optimization: short-circuit evaluation for:
+# - OR (`o`): if left side is true, right side is NOT evaluated.
+# - AND (`at`): if left side is false, right side is NOT evaluated.
+#
+# This file is ideal for tracer: you can watch `calls` and verify
+# that expensive()/mark() are skipped when short-circuit happens.
+
+gamitin magpakita
+
+baryabol calls = 0
+
+punsyon expensive():
+    calls = calls + 1
+    magpakita "expensive() ran"
+    balik totoo
+tapos
+
+punsyon mark():
+    calls = calls + 1
+    magpakita "mark() ran"
+    balik mali
+tapos
+
+# OR short-circuit: right side should be skipped
+baryabol orResult = totoo o expensive()
+magpakita orResult
+magpakita calls
+
+# AND short-circuit: right side should be skipped
+baryabol andResult = mali at mark()
+magpakita andResult
+magpakita calls
+
+# Non-short-circuit case: must evaluate right side
+baryabol andNeedsRight = totoo at expensive()
+magpakita andNeedsRight
+magpakita calls
+
+# Extra computation for tracer visibility
+punsyon fib(n):
+    kung n <= 1:
+        balik n
+    tapos
+    balik fib(n - 1) + fib(n - 2)
+tapos
+
+magpakita fib(5)

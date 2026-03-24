@@ -37,3 +37,21 @@ java -cp ".;antlr-4.13.1-complete.jar" RubricRunner
 ## Input (`magbasa`)
 
 Programs using **`magbasa`** need stdin (e.g. pipe a line). The **IDE** `/api/run` and stepping APIs accept a **`stdin`** string for reproducible runs.
+
+## Quick combined smoke tests
+
+If you want to validate many rubric constructs quickly (without running each file manually):
+
+- `00_combined_core_smoke_PASS.sawa` — no stdin required; covers constants, functions, arrays, structs, pointers, `kung/kundi`, `habang`, `para`, `gawin`.
+- `00_combined_io_event_PASS.sawa` — stdin required; covers `magbasa` + `habang_magbasa`.
+
+Run:
+
+```bash
+java -cp ".;antlr-4.13.1-complete.jar" ParserDriver rubric-tests/00_combined_core_smoke_PASS.sawa
+@"
+42
+a
+b
+"@ | java -cp ".;antlr-4.13.1-complete.jar" ParserDriver rubric-tests/00_combined_io_event_PASS.sawa
+```

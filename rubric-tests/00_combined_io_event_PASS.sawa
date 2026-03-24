@@ -1,0 +1,12 @@
+# Covers: magbasa + habang_magbasa in one short program.
+# (first line goes to magbasa; remaining lines drive event loop iterations)
+
+gamitin magpakita
+
+baryabol n = 0
+magbasa n
+magpakita n
+
+habang_magbasa:
+    magpakita "event tick"
+tapos

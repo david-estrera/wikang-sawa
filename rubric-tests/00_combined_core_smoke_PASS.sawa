@@ -1,0 +1,58 @@
+# Covers: import, konstant, function, recursion, arrays/indexing, struct,
+# pointer (&, *, *p=), if/else, while, para+hanggang, gawin+hanggang.
+
+gamitin magpakita
+
+konstant base = 2
+
+punsyon add(a, b):
+    balik a + b
+tapos
+
+punsyon fact(n):
+    kung n <= 1:
+        balik 1
+    tapos
+    balik n * fact(n - 1)
+tapos
+
+istraktura Point:
+    baryabol x = 1
+    baryabol y = 2
+tapos
+
+baryabol nums = [2, 4, 6]
+baryabol p = bagong Point()
+baryabol x = 5
+baryabol ptr = &x
+
+magpakita *ptr
+*ptr = 9
+magpakita x
+
+baryabol sum = add(nums[0], nums[2]) + p.x + base
+magpakita sum
+magpakita fact(5)
+
+kung x > 6 at hindi mali:
+    magpakita "if-then"
+tapos
+kundi:
+    magpakita "if-else"
+tapos
+
+baryabol i = 0
+habang i < 2:
+    magpakita i
+    i = i + 1
+tapos
+
+para i = 1 hanggang 3:
+    magpakita i
+tapos
+
+baryabol done = 0
+gawin:
+    done = done + 1
+    magpakita done
+hanggang done == 1

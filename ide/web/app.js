@@ -31,6 +31,9 @@ let highlightMarks = [];
 let currentSessionId = null;
 let traceEditor;
 let traceLineHandle = null;
+let diagMarkers = [];
+let diagLineHandles = [];
+let diagDebounce;
 
 function api(path, body) {
   return fetch(path, {
@@ -79,6 +82,67 @@ let debounce;
 function scheduleHighlight() {
   clearTimeout(debounce);
   debounce = setTimeout(applyHighlight, 220);
+}
+
+function scheduleDiagnostics() {
+  clearTimeout(diagDebounce);
+  diagDebounce = setTimeout(updateDiagnostics, 260);
+}
+
+function clearDiagnostics() {
+  if (!editor) return;
+  diagMarkers.forEach((m) => m.clear());
+  diagMarkers = [];
+  diagLineHandles.forEach((ln) => editor.removeLineClass(ln, 'background', 'cm-diag-line'));
+  diagLineHandles = [];
+}
+
+function makeDiagMarker() {
+  const marker = document.createElement('span');
+  marker.className = 'cm-diag-gutter';
+  marker.textContent = '●';
+  return marker;
+}
+
+async function updateDiagnostics() {
+  if (!editor) return;
+  const source = editor.getValue();
+  const diagList = document.getElementById('diag-list');
+  clearDiagnostics();
+  diagList.innerHTML = '';
+  try {
+    const j = await api('/api/diagnostics', { source });
+    const items = j.diagnostics || [];
+    if (items.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'No errors.';
+      diagList.appendChild(li);
+      return;
+    }
+    items.forEach((d) => {
+      const line = Math.max(1, Number(d.line || 1));
+      const lineIdx = line - 1;
+      editor.setGutterMarker(lineIdx, 'diag-gutter', makeDiagMarker());
+      diagMarkers.push({
+        clear: () => editor.setGutterMarker(lineIdx, 'diag-gutter', null),
+      });
+      editor.addLineClass(lineIdx, 'background', 'cm-diag-line');
+      diagLineHandles.push(lineIdx);
+
+      const li = document.createElement('li');
+      li.textContent = `L${line}:${d.col || 1} - ${d.message || 'error'}`;
+      li.addEventListener('click', () => {
+        editor.focus();
+        editor.setCursor({ line: lineIdx, ch: Math.max(0, (d.col || 1) - 1) });
+        editor.scrollIntoView({ line: lineIdx, ch: 0 }, 80);
+      });
+      diagList.appendChild(li);
+    });
+  } catch (e) {
+    const li = document.createElement('li');
+    li.textContent = 'Diagnostics unavailable: ' + String(e);
+    diagList.appendChild(li);
+  }
 }
 
 function showTab(id) {
@@ -148,11 +212,81 @@ document.getElementById('btn-tree').addEventListener('click', async () => {
   tree.textContent = 'Loading…';
   try {
     const j = await api('/api/parse-tree', { source });
-    tree.textContent = j.ok ? j.tree : 'Parse errors — fix code first.';
+    tree.textContent = j.ok ? renderBranchedTree(j.tree) : 'Parse errors — fix code first.';
   } catch (e) {
     tree.textContent = String(e);
   }
 });
+
+function renderBranchedTree(lispTree) {
+  if (!lispTree || typeof lispTree !== 'string') return '';
+  const root = parseLispTree(lispTree);
+  if (!root) return lispTree;
+  return treeToLines(root).join('\n');
+}
+
+function parseLispTree(src) {
+  let i = 0;
+  const n = src.length;
+
+  function skipWs() {
+    while (i < n && /\s/.test(src[i])) i += 1;
+  }
+
+  function readAtom() {
+    skipWs();
+    const start = i;
+    while (i < n && !/\s|\(|\)/.test(src[i])) i += 1;
+    return src.slice(start, i);
+  }
+
+  function readNode() {
+    skipWs();
+    if (i >= n) return null;
+
+    if (src[i] === '(') {
+      i += 1;
+      skipWs();
+      const label = readAtom() || '(group)';
+      const node = { label, children: [] };
+      while (i < n) {
+        skipWs();
+        if (i < n && src[i] === ')') {
+          i += 1;
+          break;
+        }
+        const child = readNode();
+        if (!child) break;
+        node.children.push(child);
+      }
+      return node;
+    }
+
+    const atom = readAtom();
+    if (!atom) return null;
+    return { label: atom, children: [] };
+  }
+
+  return readNode();
+}
+
+function treeToLines(root) {
+  const lines = [root.label];
+
+  function walk(node, prefix) {
+    const kids = node.children || [];
+    kids.forEach((child, idx) => {
+      const isLast = idx === kids.length - 1;
+      const branch = isLast ? '└── ' : '├── ';
+      lines.push(prefix + branch + child.label);
+      const nextPrefix = prefix + (isLast ? '    ' : '│   ');
+      walk(child, nextPrefix);
+    });
+  }
+
+  walk(root, '');
+  return lines;
+}
 
 document.getElementById('btn-step-init').addEventListener('click', async () => {
   const source = editor.getValue();
@@ -249,8 +383,12 @@ window.addEventListener('DOMContentLoaded', () => {
     mode: null,
     theme: 'sawa',
     indentUnit: 4,
+    gutters: ['CodeMirror-linenumbers', 'diag-gutter'],
   });
-  editor.on('change', scheduleHighlight);
+  editor.on('change', () => {
+    scheduleHighlight();
+    scheduleDiagnostics();
+  });
   editor.on('cursorActivity', () => {
     cursorKeywordTip();
     runDiagnosticsLine();
@@ -264,4 +402,5 @@ window.addEventListener('DOMContentLoaded', () => {
   traceEditor.setValue(editor.getValue());
   updateMemory([]);
   applyHighlight();
+  updateDiagnostics();
 });

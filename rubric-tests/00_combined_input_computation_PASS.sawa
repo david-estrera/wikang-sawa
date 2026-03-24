@@ -1,0 +1,21 @@
+# Combined demo with input + computation.
+
+gamitin magpakita
+
+punsyon times2(n):
+    balik n * 2
+tapos
+
+baryabol a = 0
+baryabol b = 0
+magbasa a
+magbasa b
+
+baryabol total = times2(a) + b
+magpakita total
+
+baryabol i = 0
+para i = 1 hanggang 3:
+    total = total + i
+tapos
+magpakita total

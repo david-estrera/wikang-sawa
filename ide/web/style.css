@@ -202,6 +202,41 @@ pre#out, pre#tree, pre#step {
   color: var(--accent);
 }
 
+.diag-box {
+  margin-top: 0.8rem;
+  background: #fffef8;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.diag-title {
+  font-family: 'Fredoka', sans-serif;
+  color: var(--accent);
+  margin-bottom: 0.3rem;
+}
+
+#diag-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  max-height: 140px;
+  overflow: auto;
+}
+
+#diag-list li {
+  margin: 0.15rem 0;
+  cursor: pointer;
+}
+
+.cm-diag-line {
+  background: rgba(231, 76, 60, 0.16);
+}
+
+.cm-diag-gutter {
+  color: #c0392b;
+  font-weight: 700;
+}
+
 .trace-layout {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
