@@ -44,6 +44,25 @@ magpakita "Kumusta, mundo!"
         <button type="button" class="btn" id="btn-step-init">Simulan hakbang</button>
         <button type="button" class="btn secondary" id="btn-step-next">Susunod na linya</button>
       </div>
+      <div class="trace-layout">
+        <div class="trace-code">
+          <h3>Original Code (current line highlighted)</h3>
+          <textarea id="trace-code"></textarea>
+        </div>
+        <div class="trace-memory">
+          <h3>Memory Map</h3>
+          <table id="memory-table">
+            <thead>
+              <tr>
+                <th>Variable Name</th>
+                <th>Memory Address</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="memory-body"></tbody>
+          </table>
+        </div>
+      </div>
       <pre id="step"></pre>
     </section>
     <section id="panel-tree" class="panel">

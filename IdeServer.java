@@ -210,7 +210,7 @@ public class IdeServer {
             STEPS.remove(id);
             String err = s.runtimeError != null ? s.runtimeError : "";
             okJson(ex, "{\"done\":true,\"line\":0,\"stdout\":\""
-                + escJson(drain(s)) + "\",\"error\":\"" + escJson(err) + "\"}");
+                + escJson(drain(s)) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter) + "}");
             return;
         }
         s.interpreter.stepContinue();
@@ -218,7 +218,7 @@ public class IdeServer {
             boolean got = s.stepDone.tryAcquire(30, TimeUnit.SECONDS);
             if (!got) {
                 okJson(ex, "{\"done\":false,\"line\":" + s.interpreter.getLastStepLine()
-                    + ",\"stdout\":\"" + escJson(drain(s)) + "\",\"error\":\"timeout\"}");
+                    + ",\"stdout\":\"" + escJson(drain(s)) + "\",\"error\":\"timeout\",\"memory\":" + memoryJson(s.interpreter) + "}");
                 return;
             }
         } catch (InterruptedException e) {
@@ -230,13 +230,27 @@ public class IdeServer {
         boolean done = !s.thread.isAlive();
         if (done) STEPS.remove(id);
         okJson(ex, "{\"done\":" + done + ",\"line\":" + line + ",\"stdout\":\""
-            + escJson(out) + "\",\"error\":\"" + escJson(err) + "\"}");
+            + escJson(out) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter) + "}");
     }
 
     private static String drain(StepSession s) {
         String p = s.outBuf.toString(StandardCharsets.UTF_8);
         s.outBuf.reset();
         return p;
+    }
+
+    private static String memoryJson(Interpreter interpreter) {
+        StringBuilder sb = new StringBuilder("[");
+        var cells = interpreter.snapshotMemoryMap();
+        for (int i = 0; i < cells.size(); i++) {
+            var c = cells.get(i);
+            if (i > 0) sb.append(',');
+            sb.append("{\"name\":\"").append(escJson(c.variableName))
+                .append("\",\"address\":\"").append(escJson(c.memoryAddress))
+                .append("\",\"value\":\"").append(escJson(c.value)).append("\"}");
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     private static void serveStatic(HttpExchange ex, String path) throws IOException {

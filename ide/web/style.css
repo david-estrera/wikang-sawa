@@ -201,3 +201,51 @@ pre#out, pre#tree, pre#step {
 .help-card strong {
   color: var(--accent);
 }
+
+.trace-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.trace-code,
+.trace-memory {
+  background: #fffef8;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+
+.trace-code h3,
+.trace-memory h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+#trace-code + .CodeMirror,
+#trace-code {
+  min-height: 220px;
+}
+
+.cm-trace-current {
+  background: rgba(230, 126, 34, 0.35);
+}
+
+#memory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+#memory-table th,
+#memory-table td {
+  border: 1px solid #c9bc98;
+  padding: 0.45rem;
+  text-align: left;
+}
+
+#memory-table thead th {
+  background: #f3e8c8;
+}

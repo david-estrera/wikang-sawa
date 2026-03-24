@@ -27,6 +27,19 @@ public class Interpreter {
     /** UI waits here until one statement has finished. */
     private Semaphore stepDone;
     private volatile int lastStepLine = 0;
+    private int nextAddress = 0x1000;
+
+    public static final class MemoryCell {
+        public final String variableName;
+        public final String memoryAddress;
+        public final String value;
+
+        MemoryCell(String variableName, String memoryAddress, String value) {
+            this.variableName = variableName;
+            this.memoryAddress = memoryAddress;
+            this.value = value;
+        }
+    }
 
     public Interpreter() {
         this(1_000_000, System.in, System.out);
@@ -196,6 +209,7 @@ public class Interpreter {
         }
         RuntimeValue value = evalExpression(ctx.expression());
         frame.vars.put(name, value);
+        frame.addresses.put(name, allocateAddress());
         frame.consts.add(name);
     }
 
@@ -206,6 +220,7 @@ public class Interpreter {
             throw new InterpreterException(ctx.IDENTIFIER().getSymbol(), "Variable '" + name + "' is already declared in this scope.");
         }
         frame.vars.put(name, evalExpression(ctx.expression()));
+        frame.addresses.put(name, allocateAddress());
     }
 
     private void execAssign(WikangSawaParser.AssignmentStatementContext ctx) {
@@ -700,6 +715,7 @@ public class Interpreter {
     private static final class EnvFrame {
         final Map<String, RuntimeValue> vars = new LinkedHashMap<>();
         final java.util.Set<String> consts = new java.util.HashSet<>();
+        final Map<String, Integer> addresses = new LinkedHashMap<>();
     }
 
     private static final class ReturnSignal extends RuntimeException {
@@ -729,7 +745,9 @@ public class Interpreter {
 
         EnvFrame frame = new EnvFrame();
         for (int i = 0; i < def.params.size(); i++) {
-            frame.vars.put(def.params.get(i), args.get(i));
+            String param = def.params.get(i);
+            frame.vars.put(param, args.get(i));
+            frame.addresses.put(param, allocateAddress());
         }
         envStack.push(frame);
         try {
@@ -767,5 +785,48 @@ public class Interpreter {
             if (frame.vars.containsKey(name)) return frame.vars.get(name);
         }
         return null;
+    }
+
+    public List<MemoryCell> snapshotMemoryMap() {
+        List<MemoryCell> out = new ArrayList<>();
+        List<EnvFrame> frames = new ArrayList<>(envStack);
+        for (int i = frames.size() - 1; i >= 0; i--) {
+            EnvFrame frame = frames.get(i);
+            for (Map.Entry<String, RuntimeValue> e : frame.vars.entrySet()) {
+                String name = e.getKey();
+                Integer addr = frame.addresses.get(name);
+                String addrText = formatAddress(addr == null ? 0 : addr);
+                String valueText = renderMemoryValue(e.getValue());
+                out.add(new MemoryCell(name, addrText, valueText));
+            }
+        }
+        return out;
+    }
+
+    private String renderMemoryValue(RuntimeValue v) {
+        if (v.type == RuntimeValue.Type.REFERENCE) {
+            Integer target = lookupAddress(v.refTargetName());
+            if (target != null) {
+                return formatAddress(target) + " (points to " + v.refTargetName() + ")";
+            }
+        }
+        return v.toString();
+    }
+
+    private Integer lookupAddress(String name) {
+        for (EnvFrame frame : envStack) {
+            if (frame.addresses.containsKey(name)) return frame.addresses.get(name);
+        }
+        return null;
+    }
+
+    private int allocateAddress() {
+        int addr = nextAddress;
+        nextAddress += 4;
+        return addr;
+    }
+
+    private String formatAddress(int addr) {
+        return String.format("0x%04X", addr);
     }
 }

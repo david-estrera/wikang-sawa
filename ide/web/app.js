@@ -29,6 +29,8 @@ const KEYWORDS = {
 let editor;
 let highlightMarks = [];
 let currentSessionId = null;
+let traceEditor;
+let traceLineHandle = null;
 
 function api(path, body) {
   return fetch(path, {
@@ -158,6 +160,14 @@ document.getElementById('btn-step-init').addEventListener('click', async () => {
   const step = document.getElementById('step');
   step.textContent = 'Starting…';
   currentSessionId = null;
+  if (traceEditor) {
+    traceEditor.setValue(source);
+    if (traceLineHandle != null) {
+      traceEditor.removeLineClass(traceLineHandle, 'background', 'cm-trace-current');
+      traceLineHandle = null;
+    }
+  }
+  updateMemory([]);
   try {
     const j = await api('/api/step/init', { source, stdin });
     if (!j.ok) {
@@ -179,6 +189,8 @@ document.getElementById('btn-step-next').addEventListener('click', async () => {
   const step = document.getElementById('step');
   try {
     const j = await api('/api/step/next', { sessionId: currentSessionId });
+    highlightTraceLine(j.line);
+    updateMemory(j.memory || []);
     step.textContent +=
       '\n---\nline ' + j.line + (j.done ? ' (done)' : '') + '\n' + (j.stdout || '') + (j.error || '');
     if (j.done) currentSessionId = null;
@@ -186,6 +198,50 @@ document.getElementById('btn-step-next').addEventListener('click', async () => {
     step.textContent += '\n' + e;
   }
 });
+
+function highlightTraceLine(line) {
+  if (!traceEditor) return;
+  if (traceLineHandle != null) {
+    traceEditor.removeLineClass(traceLineHandle, 'background', 'cm-trace-current');
+    traceLineHandle = null;
+  }
+  if (!line || line <= 0) return;
+  const zero = line - 1;
+  traceLineHandle = zero;
+  traceEditor.addLineClass(zero, 'background', 'cm-trace-current');
+  traceEditor.scrollIntoView({ line: zero, ch: 0 }, 80);
+}
+
+function updateMemory(memory) {
+  const body = document.getElementById('memory-body');
+  body.innerHTML = '';
+  if (!memory || memory.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="3">No variables yet.</td>';
+    body.appendChild(tr);
+    return;
+  }
+  memory.forEach((m) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' +
+      escapeHtml(m.name || '') +
+      '</td><td>' +
+      escapeHtml(m.address || '') +
+      '</td><td>' +
+      escapeHtml(m.value || '') +
+      '</td>';
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   editor = CodeMirror.fromTextArea(document.getElementById('code'), {
@@ -199,5 +255,13 @@ window.addEventListener('DOMContentLoaded', () => {
     cursorKeywordTip();
     runDiagnosticsLine();
   });
+  traceEditor = CodeMirror.fromTextArea(document.getElementById('trace-code'), {
+    lineNumbers: true,
+    mode: null,
+    theme: 'sawa',
+    readOnly: true,
+  });
+  traceEditor.setValue(editor.getValue());
+  updateMemory([]);
   applyHighlight();
 });
