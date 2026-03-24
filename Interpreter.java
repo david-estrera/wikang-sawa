@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -28,6 +30,9 @@ public class Interpreter {
     private Semaphore stepDone;
     private volatile int lastStepLine = 0;
     private int nextAddress = 0x1000;
+    private long mutationTick = 0;
+    private final Map<String, Long> symbolVersion = new LinkedHashMap<>();
+    private final Map<String, ExprCacheEntry> cseCache = new LinkedHashMap<>();
 
     public static final class MemoryCell {
         public final String variableName;
@@ -38,6 +43,15 @@ public class Interpreter {
             this.variableName = variableName;
             this.memoryAddress = memoryAddress;
             this.value = value;
+        }
+    }
+
+    private static final class ExprCacheEntry {
+        final RuntimeValue value;
+        final Map<String, Long> deps;
+        ExprCacheEntry(RuntimeValue value, Map<String, Long> deps) {
+            this.value = value;
+            this.deps = deps;
         }
     }
 
@@ -210,6 +224,7 @@ public class Interpreter {
         RuntimeValue value = evalExpression(ctx.expression());
         frame.vars.put(name, value);
         frame.addresses.put(name, allocateAddress());
+        touchSymbol(name);
         frame.consts.add(name);
     }
 
@@ -221,6 +236,7 @@ public class Interpreter {
         }
         frame.vars.put(name, evalExpression(ctx.expression()));
         frame.addresses.put(name, allocateAddress());
+        touchSymbol(name);
     }
 
     private void execAssign(WikangSawaParser.AssignmentStatementContext ctx) {
@@ -250,6 +266,7 @@ public class Interpreter {
             throw new InterpreterException(where, "Cannot assign to constant '" + name + "'.");
         }
         L.frame.vars.put(name, value);
+        touchSymbol(name);
     }
 
     private void execPrint(WikangSawaParser.PrintStatementContext ctx) {
@@ -271,6 +288,7 @@ public class Interpreter {
         }
         String line = inputScanner.nextLine();
         L.frame.vars.put(name, parseInputLine(line));
+        touchSymbol(name);
     }
 
     private static RuntimeValue parseInputLine(String line) {
@@ -372,6 +390,8 @@ public class Interpreter {
     // ===== Expression evaluation =====
 
     private RuntimeValue evalExpression(WikangSawaParser.ExpressionContext ctx) {
+        RuntimeValue cached = tryGetCachedExpr(ctx);
+        if (cached != null) return cached;
         RuntimeValue left = evalAndExpression(ctx.andExpression(0));
         for (int i = 1; i < ctx.andExpression().size(); i++) {
             boolean l = requireBoolean(ctx.getStart(), left, "Left side of 'o' must be boolean.");
@@ -380,6 +400,7 @@ public class Interpreter {
             boolean r = requireBoolean(ctx.getStart(), right, "Right side of 'o' must be boolean.");
             left = RuntimeValue.bool(r);
         }
+        storeCachedExpr(ctx, left);
         return left;
     }
 
@@ -748,6 +769,7 @@ public class Interpreter {
             String param = def.params.get(i);
             frame.vars.put(param, args.get(i));
             frame.addresses.put(param, allocateAddress());
+            touchSymbol(param);
         }
         envStack.push(frame);
         try {
@@ -828,5 +850,87 @@ public class Interpreter {
 
     private String formatAddress(int addr) {
         return String.format("0x%04X", addr);
+    }
+
+    private void touchSymbol(String name) {
+        mutationTick++;
+        symbolVersion.put(name, mutationTick);
+    }
+
+    private RuntimeValue tryGetCachedExpr(WikangSawaParser.ExpressionContext ctx) {
+        if (!isCseEligible(ctx)) return null;
+        String key = ctx.getText();
+        ExprCacheEntry e = cseCache.get(key);
+        if (e == null) return null;
+        for (Map.Entry<String, Long> dep : e.deps.entrySet()) {
+            long cur = symbolVersion.getOrDefault(dep.getKey(), 0L);
+            if (cur != dep.getValue()) return null;
+        }
+        return e.value;
+    }
+
+    private void storeCachedExpr(WikangSawaParser.ExpressionContext ctx, RuntimeValue value) {
+        if (!isCseEligible(ctx)) return;
+        String key = ctx.getText();
+        Set<String> ids = collectIdentifiers(ctx);
+        Map<String, Long> depv = new LinkedHashMap<>();
+        for (String id : ids) {
+            depv.put(id, symbolVersion.getOrDefault(id, 0L));
+        }
+        cseCache.put(key, new ExprCacheEntry(value, depv));
+    }
+
+    private boolean isCseEligible(WikangSawaParser.ExpressionContext ctx) {
+        // Safe CSE only for pure expressions without function calls, input effects, or pointer/address operators.
+        return !containsFunctionCall(ctx) && !containsAmpersand(ctx) && !containsUnaryStar(ctx);
+    }
+
+    private boolean containsFunctionCall(ParseTree tree) {
+        if (tree == null) return false;
+        if (tree instanceof WikangSawaParser.PrimaryContext p) {
+            if (p.IDENTIFIER() != null && p.LPAREN() != null) return true;
+        }
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            if (containsFunctionCall(tree.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private boolean containsAmpersand(ParseTree tree) {
+        if (tree == null) return false;
+        if (tree instanceof TerminalNode tn && tn.getSymbol().getType() == WikangSawaParser.AMPERSAND) return true;
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            if (containsAmpersand(tree.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private boolean containsUnaryStar(ParseTree tree) {
+        if (tree == null) return false;
+        if (tree instanceof WikangSawaParser.FactorContext f) {
+            if (f.STAR() != null) return true;
+        }
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            if (containsUnaryStar(tree.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private Set<String> collectIdentifiers(ParseTree tree) {
+        Set<String> out = new HashSet<>();
+        collectIdentifiersDfs(tree, out);
+        return out;
+    }
+
+    private void collectIdentifiersDfs(ParseTree tree, Set<String> out) {
+        if (tree == null) return;
+        if (tree instanceof WikangSawaParser.PrimaryContext p) {
+            if (p.IDENTIFIER() != null && p.LPAREN() == null && p.AMPERSAND() == null) {
+                out.add(p.IDENTIFIER().getText());
+            }
+        }
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            collectIdentifiersDfs(tree.getChild(i), out);
+        }
     }
 }

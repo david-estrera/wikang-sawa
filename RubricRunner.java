@@ -94,6 +94,12 @@ public class RubricRunner {
         if (name.contains("08_event")) {
             return "a\nb\nc\n";
         }
+        if (name.contains("00_combined_io_event")) {
+            return "42\na\nb\n";
+        }
+        if (name.contains("00_combined_input_computation")) {
+            return "7\n3\na\nb\n";
+        }
         return "";
     }
 }

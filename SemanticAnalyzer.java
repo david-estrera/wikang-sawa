@@ -53,6 +53,7 @@ public class SemanticAnalyzer {
     /** struct type name -> field -> type */
     private final Map<String, Map<String, ValueType>> structTypes = new LinkedHashMap<>();
     private final List<SemanticError> errors = new ArrayList<>();
+    private final Map<String, ConstValue> constantValues = new LinkedHashMap<>();
 
     private int checkedVarDecl = 0;
     private int checkedAssign = 0;
@@ -60,6 +61,17 @@ public class SemanticAnalyzer {
     private int checkedConditionals = 0;
     private int checkedLoops = 0;
     private int checkedExpressions = 0;
+    private int foldedConstants = 0;
+    private int deadBranchesPruned = 0;
+
+    private static final class ConstValue {
+        final ValueType type;
+        final Object value;
+        ConstValue(ValueType type, Object value) {
+            this.type = type;
+            this.value = value;
+        }
+    }
 
     public void analyze(WikangSawaParser.ProgramContext program) {
         analyzeProgram(program);
@@ -97,6 +109,8 @@ public class SemanticAnalyzer {
         System.out.println("    Conditionals checked:          " + checkedConditionals);
         System.out.println("    Loops checked:                 " + checkedLoops);
         System.out.println("    Expressions type-checked:      " + checkedExpressions);
+        System.out.println("    Constant folds (semantic):     " + foldedConstants);
+        System.out.println("    Dead branches pruned (kung):   " + deadBranchesPruned);
 
         if (errors.isEmpty()) {
             System.out.println("----------------------------------------");
@@ -243,6 +257,7 @@ public class SemanticAnalyzer {
         }
         ValueType rhs = typeOfExpression(ctx.expression());
         symbols.put(name, rhs);
+        constantValues.remove(name);
         String sn = extractBagongStructName(ctx.expression());
         if (sn != null) varStructType.put(name, sn);
     }
@@ -257,6 +272,11 @@ public class SemanticAnalyzer {
         ValueType rhs = typeOfExpression(ctx.expression());
         symbols.put(name, rhs);
         consts.add(name);
+        ConstValue cv = evaluateConstExpression(ctx.expression());
+        if (cv != null) {
+            constantValues.put(name, cv);
+            foldedConstants++;
+        }
         String sn = extractBagongStructName(ctx.expression());
         if (sn != null) varStructType.put(name, sn);
     }
@@ -288,6 +308,7 @@ public class SemanticAnalyzer {
             return;
         }
         symbols.put(name, rhs);
+        constantValues.remove(name);
         String sn = extractBagongStructName(ctx.expression());
         if (sn != null) varStructType.put(name, sn);
         else varStructType.remove(name);
@@ -313,6 +334,17 @@ public class SemanticAnalyzer {
         checkedConditionals++;
         ValueType cond = typeOfExpression(ctx.expression());
         requireBoolean(ctx.expression().getStart(), cond, "Condition in 'kung' must be boolean (totoo/mali or boolean expression).");
+        ConstValue c = evaluateConstExpression(ctx.expression());
+        if (c != null && c.type == ValueType.BOOLEAN) {
+            boolean b = (boolean) c.value;
+            deadBranchesPruned++;
+            if (b) {
+                if (ctx.block().size() > 0) analyzeBlock(ctx.block(0));
+            } else {
+                if (ctx.block().size() > 1) analyzeBlock(ctx.block(1));
+            }
+            return;
+        }
         if (ctx.block().size() > 0) analyzeBlock(ctx.block(0));
         if (ctx.block().size() > 1) analyzeBlock(ctx.block(1));
     }
@@ -568,6 +600,169 @@ public class SemanticAnalyzer {
         if (ctx.MALI() != null) return ValueType.BOOLEAN;
         if (ctx.WALA() != null) return ValueType.NULL;
         return ValueType.UNKNOWN;
+    }
+
+    private ConstValue evaluateConstExpression(WikangSawaParser.ExpressionContext ctx) {
+        if (ctx == null) return null;
+        if (ctx.andExpression().isEmpty()) return null;
+        ConstValue left = evalConstAnd(ctx.andExpression(0));
+        if (left == null) return null;
+        for (int i = 1; i < ctx.andExpression().size(); i++) {
+            ConstValue right = evalConstAnd(ctx.andExpression(i));
+            if (right == null) return null;
+            if (left.type != ValueType.BOOLEAN || right.type != ValueType.BOOLEAN) return null;
+            left = new ConstValue(ValueType.BOOLEAN, ((boolean) left.value) || ((boolean) right.value));
+        }
+        return left;
+    }
+
+    private ConstValue evalConstAnd(WikangSawaParser.AndExpressionContext ctx) {
+        ConstValue left = evalConstNot(ctx.notExpression(0));
+        if (left == null) return null;
+        for (int i = 1; i < ctx.notExpression().size(); i++) {
+            ConstValue right = evalConstNot(ctx.notExpression(i));
+            if (right == null) return null;
+            if (left.type != ValueType.BOOLEAN || right.type != ValueType.BOOLEAN) return null;
+            left = new ConstValue(ValueType.BOOLEAN, ((boolean) left.value) && ((boolean) right.value));
+        }
+        return left;
+    }
+
+    private ConstValue evalConstNot(WikangSawaParser.NotExpressionContext ctx) {
+        if (ctx.HINDI() != null) {
+            ConstValue inner = evalConstNot(ctx.notExpression());
+            if (inner == null || inner.type != ValueType.BOOLEAN) return null;
+            return new ConstValue(ValueType.BOOLEAN, !((boolean) inner.value));
+        }
+        return evalConstComparison(ctx.comparisonExpression());
+    }
+
+    private ConstValue evalConstComparison(WikangSawaParser.ComparisonExpressionContext ctx) {
+        ConstValue left = evalConstArithmetic(ctx.arithmeticExpression(0));
+        if (left == null) return null;
+        if (ctx.relOp() == null) return left;
+        ConstValue right = evalConstArithmetic(ctx.arithmeticExpression(1));
+        if (right == null) return null;
+        String op = ctx.relOp().getText();
+        if ("==".equals(op) || "!=".equals(op)) {
+            boolean eq;
+            if (isNumericConst(left) && isNumericConst(right)) {
+                eq = asDouble(left) == asDouble(right);
+            } else {
+                eq = Objects.equals(left.value, right.value) && left.type == right.type;
+            }
+            return new ConstValue(ValueType.BOOLEAN, "==".equals(op) ? eq : !eq);
+        }
+        if (isNumericConst(left) && isNumericConst(right)) {
+            double a = asDouble(left);
+            double b = asDouble(right);
+            return switch (op) {
+                case "<" -> new ConstValue(ValueType.BOOLEAN, a < b);
+                case ">" -> new ConstValue(ValueType.BOOLEAN, a > b);
+                case "<=" -> new ConstValue(ValueType.BOOLEAN, a <= b);
+                case ">=" -> new ConstValue(ValueType.BOOLEAN, a >= b);
+                default -> null;
+            };
+        }
+        return null;
+    }
+
+    private ConstValue evalConstArithmetic(WikangSawaParser.ArithmeticExpressionContext ctx) {
+        ConstValue acc = evalConstTerm(ctx.term(0));
+        if (acc == null) return null;
+        for (int i = 1; i < ctx.term().size(); i++) {
+            String op = ctx.getChild(2 * i - 1).getText();
+            ConstValue rhs = evalConstTerm(ctx.term(i));
+            if (rhs == null || !isNumericConst(acc) || !isNumericConst(rhs)) return null;
+            double a = asDouble(acc);
+            double b = asDouble(rhs);
+            boolean dec = isDecimalConst(acc) || isDecimalConst(rhs);
+            double v = switch (op) {
+                case "+" -> a + b;
+                case "-" -> a - b;
+                default -> Double.NaN;
+            };
+            if (Double.isNaN(v)) return null;
+            acc = dec ? new ConstValue(ValueType.DECIMAL, v) : new ConstValue(ValueType.NUMBER, (long) v);
+        }
+        return acc;
+    }
+
+    private ConstValue evalConstTerm(WikangSawaParser.TermContext ctx) {
+        ConstValue acc = evalConstFactor(ctx.factor(0));
+        if (acc == null) return null;
+        for (int i = 1; i < ctx.factor().size(); i++) {
+            String op = ctx.getChild(2 * i - 1).getText();
+            ConstValue rhs = evalConstFactor(ctx.factor(i));
+            if (rhs == null || !isNumericConst(acc) || !isNumericConst(rhs)) return null;
+            double a = asDouble(acc);
+            double b = asDouble(rhs);
+            boolean dec = isDecimalConst(acc) || isDecimalConst(rhs);
+            double v = switch (op) {
+                case "*" -> a * b;
+                case "/" -> a / b;
+                case "%" -> a % b;
+                default -> Double.NaN;
+            };
+            if (Double.isNaN(v)) return null;
+            acc = dec ? new ConstValue(ValueType.DECIMAL, v) : new ConstValue(ValueType.NUMBER, (long) v);
+        }
+        return acc;
+    }
+
+    private ConstValue evalConstFactor(WikangSawaParser.FactorContext ctx) {
+        if (ctx.STAR() != null) return null;
+        ConstValue base = evalConstPostfix(ctx.postfix());
+        if (base == null) return null;
+        if (ctx.MINUS() != null) {
+            if (!isNumericConst(base)) return null;
+            if (isDecimalConst(base)) return new ConstValue(ValueType.DECIMAL, -asDouble(base));
+            return new ConstValue(ValueType.NUMBER, -((long) base.value));
+        }
+        return base;
+    }
+
+    private ConstValue evalConstPostfix(WikangSawaParser.PostfixContext ctx) {
+        // Keep folding conservative: only plain primaries (no [] or . access)
+        if (ctx.children != null) {
+            for (ParseTree ch : ctx.children) {
+                if (ch instanceof TerminalNode tn) {
+                    int tt = tn.getSymbol().getType();
+                    if (tt == WikangSawaParser.DOT || tt == WikangSawaParser.LBRACKET) return null;
+                }
+            }
+        }
+        return evalConstPrimary(ctx.primary());
+    }
+
+    private ConstValue evalConstPrimary(WikangSawaParser.PrimaryContext ctx) {
+        if (ctx.literal() != null) {
+            if (ctx.literal().NUMERO() != null) return new ConstValue(ValueType.NUMBER, Long.parseLong(ctx.literal().NUMERO().getText()));
+            if (ctx.literal().DESIMAL() != null) return new ConstValue(ValueType.DECIMAL, Double.parseDouble(ctx.literal().DESIMAL().getText()));
+            if (ctx.literal().TOTOO() != null) return new ConstValue(ValueType.BOOLEAN, true);
+            if (ctx.literal().MALI() != null) return new ConstValue(ValueType.BOOLEAN, false);
+            if (ctx.literal().SALITA() != null) return new ConstValue(ValueType.STRING, ctx.literal().SALITA().getText());
+            if (ctx.literal().WALA() != null) return new ConstValue(ValueType.NULL, null);
+            return null;
+        }
+        if (ctx.expression() != null) return evaluateConstExpression(ctx.expression());
+        if (ctx.IDENTIFIER() != null && ctx.LPAREN() == null) {
+            return constantValues.get(ctx.IDENTIFIER().getText());
+        }
+        return null;
+    }
+
+    private boolean isNumericConst(ConstValue v) {
+        return v.type == ValueType.NUMBER || v.type == ValueType.DECIMAL;
+    }
+
+    private boolean isDecimalConst(ConstValue v) {
+        return v.type == ValueType.DECIMAL;
+    }
+
+    private double asDouble(ConstValue v) {
+        if (v.type == ValueType.DECIMAL) return (double) v.value;
+        return (double) ((long) v.value);
     }
 
     /** If expression is exactly `bagong Type()`, return Type; else null. */

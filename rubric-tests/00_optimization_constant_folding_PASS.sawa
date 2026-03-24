@@ -1,0 +1,7 @@
+# Constant folding demo.
+# Semantic analyzer should count folded constants.
+
+konstant a = 2 + 3 * 4
+konstant b = (10 - 1) * 2
+konstant c = a + b
+magpakita c

@@ -1,0 +1,18 @@
+# Common subexpression elimination (runtime-safe, pure expressions only).
+# Repeated pure expression should be cache-eligible.
+
+baryabol x = 7
+baryabol y = 3
+baryabol r1 = (x * x + y * y) + (x * x + y * y)
+magpakita r1
+
+# Side-effect call should not be CSE-cached (function calls are excluded for safety).
+baryabol calls = 0
+punsyon bump():
+    calls = calls + 1
+    balik calls
+tapos
+
+baryabol z = bump() + bump()
+magpakita z
+magpakita calls
