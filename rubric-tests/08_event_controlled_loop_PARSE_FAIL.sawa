@@ -1,7 +1,0 @@
-# PARSE-FAIL: Event-controlled loop is not implemented.
-# Hypothetical syntax examples (not supported): kapag_event(...): ... tapos
-
-eventloop:
-    magpakita "waiting..."
-tapos
-

@@ -11,12 +11,18 @@ program: statement* EOF;
 statement: blockStatement | NEWLINE;
 blockStatement: importStatement
               | functionDeclaration
+              | structureDeclaration
               | variableDeclaration
+              | constantDeclaration
               | assignmentStatement
               | printStatement
+              | inputStatement
               | returnStatement
               | conditionalStatement
               | loopStatement
+              | countLoopStatement
+              | repeatUntilStatement
+              | eventLineLoopStatement
               ;
 
 // Import statement: gamitin identifier (e.g. gamitin magpakita; magpakita is a keyword)
@@ -29,8 +35,19 @@ paramList: IDENTIFIER (COMMA IDENTIFIER)*;
 // Variable declaration: baryabol identifier = expression
 variableDeclaration: BARYABOL IDENTIFIER ASSIGN expression NEWLINE;
 
-// Assignment statement: identifier = expression
-assignmentStatement: IDENTIFIER ASSIGN expression NEWLINE;
+// Constant declaration: konstant identifier = expression
+constantDeclaration: KONSTANT IDENTIFIER ASSIGN expression NEWLINE;
+
+// Structure type: istraktura Name: ... tapos
+structureDeclaration: ISTRAKTURA IDENTIFIER COLON structBlock TAPOS optionalNewlines;
+structBlock: NEWLINE INDENT structField+ NEWLINE* DEDENT;
+structField: BARYABOL IDENTIFIER ASSIGN expression NEWLINE;
+
+// Assignment statement: identifier = expression | *identifier = expression (through pointer)
+assignmentStatement: (STAR)? IDENTIFIER ASSIGN expression NEWLINE;
+
+// Input: magbasa name (variable must already exist)
+inputStatement: MAGBASA IDENTIFIER NEWLINE;
 
 // Print statement: magpakita expression
 printStatement: MAGPAKITA expression NEWLINE;
@@ -46,9 +63,19 @@ conditionalStatement: KUNG expression COLON block NEWLINE* TAPOS (optionalNewlin
 // Loop statement: habang expression: block tapos
 loopStatement: HABANG expression COLON block TAPOS NEWLINE?;
 
+// Count-controlled: para i = start hanggang end: block tapos (inclusive end, step 1)
+countLoopStatement: PARA IDENTIFIER ASSIGN expression HANGGANG expression COLON block TAPOS NEWLINE?;
+
+// Repeat-until: gawin: block hanggang condition
+repeatUntilStatement: GAWIN COLON block HANGGANG expression NEWLINE?;
+
+// Event loop (stdin line per iteration): habang_magbasa: block tapos
+eventLineLoopStatement: HABANG_MAGBASA COLON block TAPOS NEWLINE?;
+
 // Block structure using INDENT/DEDENT (Python-style)
 // blockStatement+ (no NEWLINE) so NEWLINE* before DEDENT consumes newlines; next token after block is DEDENT then tapos/kundi
-block: NEWLINE INDENT blockStatement+ NEWLINE* DEDENT;
+// Allow blank lines / comment-only lines between statements (NEWLINE tokens after skipped comments)
+block: NEWLINE INDENT (NEWLINE* blockStatement)+ NEWLINE* DEDENT;
 
 // Expression hierarchy with proper operator precedence
 // Lowest precedence: Logical OR
@@ -74,13 +101,15 @@ arithmeticExpression: term ((PLUS | MINUS) term)*;
 // Terms (multiplication/division/modulo)
 term: factor ((STAR | SLASH | PERCENT) factor)*;
 
-// Factors: unary minus, parentheses, literals, identifiers, calls, arrays, indexing
-factor: (MINUS)? postfix;
+// Factors: unary minus, unary * deref, address-of
+factor: (MINUS | STAR)? postfix;
 
-postfix: primary (LBRACKET expression RBRACKET)*;
+postfix: primary (DOT IDENTIFIER)* (LBRACKET expression RBRACKET)*;
 
 primary
     : literal
+    | BAGONG IDENTIFIER LPAREN RPAREN
+    | AMPERSAND IDENTIFIER
     | IDENTIFIER (LPAREN argList? RPAREN)?
     | LPAREN expression RPAREN
     | arrayLiteral

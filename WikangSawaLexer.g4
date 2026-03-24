@@ -71,14 +71,20 @@ BALIK : 'balik';
 KUNG : 'kung';
 HABANG : 'habang';
 BARYABOL : 'baryabol';
+KONSTANT : 'konstant';
 TAPOS : 'tapos';
 PARA : 'para';
+GAWIN : 'gawin';
+HANGGANG : 'hanggang';
 KAPAG : 'kapag';
 KUNDI : 'kundi';
 SA : 'sa';
 AY : 'ay';
 MAGPAKITA : 'magpakita';
 MAGBASA : 'magbasa';
+HABANG_MAGBASA : 'habang_magbasa';
+ISTRAKTURA : 'istraktura';
+BAGONG : 'bagong';
 TOTOO : 'totoo';
 MALI : 'mali';
 WALA : 'wala';
@@ -105,6 +111,8 @@ PERCENT : '%';
 
 // Assignment
 ASSIGN : '=';
+
+AMPERSAND : '&';
 
 // Punctuation
 LPAREN : '(';

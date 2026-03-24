@@ -1,0 +1,4 @@
+# PASS: konstant declares an immutable binding.
+
+konstant x = 10
+magpakita x

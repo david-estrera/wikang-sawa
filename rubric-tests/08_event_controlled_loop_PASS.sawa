@@ -1,0 +1,5 @@
+# PASS: habang_magbasa runs the body once per line of stdin until EOF.
+
+habang_magbasa:
+    magpakita "linya"
+tapos

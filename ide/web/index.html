@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wikang Sawa IDE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">Wikang Sawa</div>
+    <div class="hint">Magsulat, tumakbo, mag-trace — lokal lamang sa iyong computer</div>
+  </header>
+  <nav class="tabs">
+    <button type="button" data-tab="editor" class="active">Editor</button>
+    <button type="button" data-tab="run">Takbo & Output</button>
+    <button type="button" data-tab="step">Hakbang / Trace</button>
+    <button type="button" data-tab="tree">Parse tree</button>
+    <button type="button" data-tab="help">Tulong</button>
+  </nav>
+  <main>
+    <section id="panel-editor" class="panel active">
+      <p class="hint">May kulay ang mga keyword mula sa server. Ilagay ang cursor sa salita para sa maliit na tulong.</p>
+      <div id="editor-wrap">
+        <textarea id="code" spellcheck="false">gamitin magpakita
+magpakita "Kumusta, mundo!"
+</textarea>
+      </div>
+    </section>
+    <section id="panel-run" class="panel">
+      <div class="row">
+        <label class="hint">Stdin (opsyonal, bawat linya para sa magbasa / habang_magbasa):</label>
+      </div>
+      <textarea id="stdin" rows="4" placeholder="hal. 10"></textarea>
+      <div class="row" style="margin-top:1rem">
+        <button type="button" class="btn" id="btn-run">Takbo</button>
+      </div>
+      <pre id="out"></pre>
+    </section>
+    <section id="panel-step" class="panel">
+      <p class="hint">Unahin ang “Simulan hakbang”, pagkatapos ay “Susunod na linya” nang paulit-ulit.</p>
+      <div class="row">
+        <button type="button" class="btn" id="btn-step-init">Simulan hakbang</button>
+        <button type="button" class="btn secondary" id="btn-step-next">Susunod na linya</button>
+      </div>
+      <pre id="step"></pre>
+    </section>
+    <section id="panel-tree" class="panel">
+      <div class="row">
+        <button type="button" class="btn" id="btn-tree">Kuhanin ang parse tree</button>
+      </div>
+      <pre id="tree"></pre>
+    </section>
+    <section id="panel-help" class="panel">
+      <div class="help-grid">
+        <div class="help-card"><strong>baryabol</strong> — variable</div>
+        <div class="help-card"><strong>konstant</strong> — hindi mababago</div>
+        <div class="help-card"><strong>magpakita</strong> — print</div>
+        <div class="help-card"><strong>magbasa</strong> — basahin ang isang linya</div>
+        <div class="help-card"><strong>kung / kundi</strong> — if / else</div>
+        <div class="help-card"><strong>habang</strong> — while</div>
+        <div class="help-card"><strong>para i = 1 hanggang 5</strong> — loop</div>
+        <div class="help-card"><strong>gawin: … hanggang</strong> — hanggang totoo</div>
+        <div class="help-card"><strong>habang_magbasa</strong> — bawat linya ng stdin</div>
+        <div class="help-card"><strong>punsyon / balik</strong> — function</div>
+        <div class="help-card"><strong>istraktura / bagong</strong> — struct</div>
+        <div class="help-card"><strong>&amp; x / *p</strong> — pointer</div>
+      </div>
+    </section>
+  </main>
+  <div id="hover-tip" role="status"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

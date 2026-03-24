@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;600;700&display=swap');
+
+:root {
+  --bg: #40513B;
+  --accent: #628141;
+  --panel: #E5D9B6;
+  --highlight: #E67E22;
+  --text: #2c2416;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, .tabs button, .logo {
+  font-family: 'Fredoka', sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, var(--accent) 0%, #4a6b38 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0,0,0,.12);
+}
+
+.tabs button {
+  border: none;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  background: var(--panel);
+  color: var(--text);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tabs button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--highlight);
+}
+
+.tabs button.active {
+  background: var(--highlight);
+  color: #fff;
+  box-shadow: 0 3px 0 #b85a0f;
+}
+
+main {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.panel {
+  display: none;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1rem;
+  min-height: 420px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+
+.panel.active {
+  display: block;
+}
+
+#editor-wrap {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 3px solid var(--accent);
+}
+
+.CodeMirror {
+  min-height: 360px;
+  font-size: 15px;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.cm-s-sawa.CodeMirror {
+  background: #fffef8;
+  color: var(--text);
+}
+
+.cm-s-sawa .cm-keyword { color: #1a5f2a; font-weight: 700; }
+.cm-s-sawa .cm-number { color: #c0392b; }
+.cm-s-sawa .cm-string { color: #8e44ad; }
+.cm-s-sawa .cm-bool { color: #2980b9; }
+.cm-s-sawa .cm-id { color: #34495e; }
+.cm-s-sawa .cm-op { color: #d35400; }
+.cm-s-sawa .cm-comment { color: #7f8c8d; font-style: italic; }
+
+textarea#stdin, pre#out, pre#tree, pre#step {
+  width: 100%;
+  font-family: 'Nunito', monospace;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  padding: 0.75rem;
+  background: #fffef8;
+}
+
+pre#out, pre#tree, pre#step {
+  min-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  font-family: 'Fredoka', sans-serif;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #3d5c2e;
+}
+
+.btn:hover {
+  filter: brightness(1.08);
+}
+
+.btn.secondary {
+  background: var(--highlight);
+  box-shadow: 0 3px 0 #b85a0f;
+}
+
+.hint {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+#hover-tip {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  max-width: 280px;
+  padding: 0.75rem 1rem;
+  background: var(--highlight);
+  color: #fff;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  display: none;
+  z-index: 50;
+}
+
+#hover-tip.visible {
+  display: block;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.help-card {
+  background: #fffef8;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border-left: 4px solid var(--highlight);
+}
+
+.help-card strong {
+  color: var(--accent);
+}

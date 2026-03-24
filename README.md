@@ -271,6 +271,39 @@ wikang-sawa/
 └── sample*.sawa                  # Sample input files
 ```
 
+## Rubric test suite
+
+Automated checks for `rubric-tests/*_PASS.sawa` and expected-failure files `21`–`26`:
+
+```bash
+java -cp ".;antlr-4.13.1-complete.jar" RubricRunner
+```
+
+See `rubric-tests/README.md` for exit codes and expectations.
+
+## Local web IDE
+
+Browser UI (highlight, diagnostics, run with stdin, stepping, parse tree):
+
+```bash
+javac -cp ".;antlr-4.13.1-complete.jar" *.java
+java -cp ".;antlr-4.13.1-complete.jar" IdeServer
+```
+
+Open **http://localhost:8787/** (run from project root so `ide/web/` is found). Details: `ide/README.md`.
+
+## Extended constructs (language)
+
+- **`konstant`**: immutable binding; cannot assign again.
+- **`magbasa x`**: reads one line (trimmed); tries integer, then decimal, otherwise stores a **string**. Requires prior `baryabol x`.
+- **`para i = m hanggang n:`** … **`tapos`**: inclusive count loop, step 1 (`i` must already be declared).
+- **`gawin:`** … **`hanggang expr`**: runs the block, then repeats until `expr` is **totoo**.
+- **`habang_magbasa:`** … **`tapos`**: runs the body once per **stdin line** until EOF (each iteration consumes one line before the body; extra `magbasa` calls read further lines).
+- **`istraktura Name:`** … **`tapos`**: struct with `baryabol field = expr` fields; instances via **`bagong Name()`**; fields with **`.`**.
+- **Pointers**: **`&x`**, unary **`*p`**, assignment **`*p = expr`** (shallow: target is a variable name).
+
+Shared pipeline: `WikangSawaPipeline` (parse, semantic diagnostics, quiet run for tools).
+
 ## Additional Notes
 
 - The lexer implements Python-style indentation using INDENT and DEDENT tokens
@@ -281,4 +314,10 @@ wikang-sawa/
   - variables must be declared before use
   - `kung` / `habang` conditions must be boolean
   - arithmetic operators require numeric operands
+- Regenerate grammars with **`-visitor -no-listener`** if you use `ConstructRecognizer` / visitors:
+
+```bash
+java -jar antlr-4.13.1-complete.jar -no-listener -visitor WikangSawaLexer.g4
+java -jar antlr-4.13.1-complete.jar -no-listener -visitor WikangSawaParser.g4
+```
 

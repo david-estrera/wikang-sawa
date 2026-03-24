@@ -1,3 +1,6 @@
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class RuntimeValue {
     public enum Type {
         NUMBER,
@@ -5,7 +8,11 @@ public final class RuntimeValue {
         STRING,
         BOOLEAN,
         ARRAY,
-        NULL
+        NULL,
+        /** Reference to a variable name (shallow pointer: &x) */
+        REFERENCE,
+        /** Struct instance: field name -> value */
+        STRUCT
     }
 
     public final Type type;
@@ -40,8 +47,28 @@ public final class RuntimeValue {
         return new RuntimeValue(Type.ARRAY, v);
     }
 
+    /** Pointer: target variable name resolved through the environment stack. */
+    public static RuntimeValue reference(String varName) {
+        return new RuntimeValue(Type.REFERENCE, varName);
+    }
+
+    public static RuntimeValue structInstance(Map<String, RuntimeValue> fields) {
+        return new RuntimeValue(Type.STRUCT, fields);
+    }
+
     public boolean isNumeric() {
         return type == Type.NUMBER || type == Type.DECIMAL;
+    }
+
+    public String refTargetName() {
+        if (type != Type.REFERENCE) throw new IllegalStateException("Not a REFERENCE");
+        return (String) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, RuntimeValue> asStructFields() {
+        if (type != Type.STRUCT) throw new IllegalStateException("Not a STRUCT");
+        return (Map<String, RuntimeValue>) value;
     }
 
     public long asLong() {
@@ -71,13 +98,37 @@ public final class RuntimeValue {
         throw new IllegalStateException("Not an ARRAY");
     }
 
+    public boolean isStruct() {
+        return type == Type.STRUCT;
+    }
+
+    /** Deep-enough copy for assignment (structs are cloned). */
+    public RuntimeValue copyValue() {
+        return switch (type) {
+            case STRUCT -> {
+                Map<String, RuntimeValue> m = new LinkedHashMap<>();
+                for (var e : asStructFields().entrySet()) {
+                    m.put(e.getKey(), e.getValue().copyValue());
+                }
+                yield structInstance(m);
+            }
+            case ARRAY -> {
+                java.util.List<RuntimeValue> copy = new java.util.ArrayList<>();
+                for (RuntimeValue v : asArray()) {
+                    copy.add(v.copyValue());
+                }
+                yield array(copy);
+            }
+            default -> this;
+        };
+    }
+
     @Override
     public String toString() {
         return switch (type) {
             case NUMBER -> Long.toString((long) value);
             case DECIMAL -> {
                 double d = (double) value;
-                // Keep it simple for demo: avoid trailing .0 when possible
                 if (d == Math.rint(d)) yield Long.toString((long) d);
                 yield Double.toString(d);
             }
@@ -95,6 +146,18 @@ public final class RuntimeValue {
                 yield sb.toString();
             }
             case NULL -> "wala";
+            case REFERENCE -> "&" + value;
+            case STRUCT -> {
+                StringBuilder sb = new StringBuilder();
+                sb.append("{");
+                int i = 0;
+                for (var e : asStructFields().entrySet()) {
+                    if (i++ > 0) sb.append(", ");
+                    sb.append(e.getKey()).append("=").append(e.getValue().toString());
+                }
+                sb.append("}");
+                yield sb.toString();
+            }
         };
     }
 
@@ -112,4 +175,3 @@ public final class RuntimeValue {
         return 31 * type.hashCode() + value.hashCode();
     }
 }
-

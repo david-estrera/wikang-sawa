@@ -1,0 +1,6 @@
+# PASS: para ... hanggang ... inclusive count loop (step 1).
+
+baryabol i = 0
+para i = 1 hanggang 3:
+    magpakita i
+tapos

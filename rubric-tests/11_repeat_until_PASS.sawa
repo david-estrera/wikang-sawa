@@ -1,0 +1,5 @@
+# PASS: gawin: block hanggang expr — repeats until condition is totoo.
+
+gawin:
+    magpakita "hello"
+hanggang totoo

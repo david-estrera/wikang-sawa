@@ -1,0 +1,8 @@
+# PASS: istraktura, bagong Type(), field access with dot.
+
+istraktura Person:
+    baryabol name = "Juan"
+tapos
+
+baryabol p = bagong Person()
+magpakita p.name

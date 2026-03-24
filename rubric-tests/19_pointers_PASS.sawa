@@ -1,0 +1,5 @@
+# PASS: &x address-of, unary * dereference, shallow pointers to variables.
+
+baryabol x = 10
+baryabol p = &x
+magpakita *p

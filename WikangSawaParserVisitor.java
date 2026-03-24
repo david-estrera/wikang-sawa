@@ -52,11 +52,41 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableDeclaration(WikangSawaParser.VariableDeclarationContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#constantDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstantDeclaration(WikangSawaParser.ConstantDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#structureDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructureDeclaration(WikangSawaParser.StructureDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#structBlock}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructBlock(WikangSawaParser.StructBlockContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#structField}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructField(WikangSawaParser.StructFieldContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#assignmentStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitAssignmentStatement(WikangSawaParser.AssignmentStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#inputStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInputStatement(WikangSawaParser.InputStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#printStatement}.
 	 * @param ctx the parse tree
@@ -87,6 +117,24 @@ public interface WikangSawaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitLoopStatement(WikangSawaParser.LoopStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#countLoopStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCountLoopStatement(WikangSawaParser.CountLoopStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#repeatUntilStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRepeatUntilStatement(WikangSawaParser.RepeatUntilStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link WikangSawaParser#eventLineLoopStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEventLineLoopStatement(WikangSawaParser.EventLineLoopStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link WikangSawaParser#block}.
 	 * @param ctx the parse tree

@@ -1,5 +1,5 @@
 # INTERPRETER-FAIL: Array index out of bounds at runtime.
-# Parses and passes semantic checks (we don't prove bounds statically),
+# Parses and passes semantic checks,
 # but interpreter should throw a runtime error and stop.
 
 gamitin magpakita

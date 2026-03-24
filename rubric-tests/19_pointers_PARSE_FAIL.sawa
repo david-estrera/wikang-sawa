@@ -1,7 +1,0 @@
-# PARSE-FAIL: Pointers are not implemented (no syntax/semantics/runtime).
-# Hypothetical examples (not supported): &x, *p, pointer types.
-
-baryabol x = 10
-baryabol p = &x
-magpakita *p
-

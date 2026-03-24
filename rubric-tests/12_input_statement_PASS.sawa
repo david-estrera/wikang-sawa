@@ -1,0 +1,6 @@
+# PASS: magbasa reads one line (trimmed); number if parseable else string.
+
+magpakita "Ilagay ang edad:"
+baryabol age = 0
+magbasa age
+magpakita age
