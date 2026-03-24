@@ -63,6 +63,8 @@ public class SemanticAnalyzer {
     private int checkedExpressions = 0;
     private int foldedConstants = 0;
     private int deadBranchesPruned = 0;
+    private final List<String> foldEvents = new ArrayList<>();
+    private final List<String> pruneEvents = new ArrayList<>();
 
     private static final class ConstValue {
         final ValueType type;
@@ -111,6 +113,15 @@ public class SemanticAnalyzer {
         System.out.println("    Expressions type-checked:      " + checkedExpressions);
         System.out.println("    Constant folds (semantic):     " + foldedConstants);
         System.out.println("    Dead branches pruned (kung):   " + deadBranchesPruned);
+        if (!foldEvents.isEmpty() || !pruneEvents.isEmpty()) {
+            System.out.println("  Optimization log:");
+            for (String s : foldEvents) {
+                System.out.println("    [Fold]  " + s);
+            }
+            for (String s : pruneEvents) {
+                System.out.println("    [Prune] " + s);
+            }
+        }
 
         if (errors.isEmpty()) {
             System.out.println("----------------------------------------");
@@ -276,6 +287,8 @@ public class SemanticAnalyzer {
         if (cv != null) {
             constantValues.put(name, cv);
             foldedConstants++;
+            foldEvents.add("line " + ctx.getStart().getLine() + ": konstant " + name + " = "
+                + ctx.expression().getText() + " -> " + constValueToText(cv));
         }
         String sn = extractBagongStructName(ctx.expression());
         if (sn != null) varStructType.put(name, sn);
@@ -338,6 +351,9 @@ public class SemanticAnalyzer {
         if (c != null && c.type == ValueType.BOOLEAN) {
             boolean b = (boolean) c.value;
             deadBranchesPruned++;
+            pruneEvents.add("line " + ctx.getStart().getLine() + ": kung " + ctx.expression().getText()
+                + " is constant " + (b ? "totoo" : "mali")
+                + " (pruned " + (b ? "kundi" : "then") + " branch)");
             if (b) {
                 if (ctx.block().size() > 0) analyzeBlock(ctx.block(0));
             } else {
@@ -763,6 +779,18 @@ public class SemanticAnalyzer {
     private double asDouble(ConstValue v) {
         if (v.type == ValueType.DECIMAL) return (double) v.value;
         return (double) ((long) v.value);
+    }
+
+    private String constValueToText(ConstValue v) {
+        if (v == null) return "<?>"; 
+        return switch (v.type) {
+            case NUMBER -> Long.toString((long) v.value);
+            case DECIMAL -> Double.toString((double) v.value);
+            case BOOLEAN -> ((boolean) v.value) ? "totoo" : "mali";
+            case STRING -> "\"" + v.value + "\"";
+            case NULL -> "wala";
+            default -> String.valueOf(v.value);
+        };
     }
 
     /** If expression is exactly `bagong Type()`, return Type; else null. */

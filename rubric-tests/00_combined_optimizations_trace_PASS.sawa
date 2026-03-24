@@ -1,4 +1,4 @@
-# PASS: Combined optimization-focused trace demo.
+# Combined optimization-focused trace demo.
 # Main observable optimization: short-circuit evaluation for:
 # - OR (`o`): if left side is true, right side is NOT evaluated.
 # - AND (`at`): if left side is false, right side is NOT evaluated.
