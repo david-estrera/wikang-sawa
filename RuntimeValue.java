@@ -12,7 +12,9 @@ public final class RuntimeValue {
         /** Reference to a variable name (shallow pointer: &x) */
         REFERENCE,
         /** Struct instance: field name -> value */
-        STRUCT
+        STRUCT,
+        /** Reference to a heap object address created by arrays/structs. */
+        HEAP_REF
     }
 
     public final Type type;
@@ -54,6 +56,15 @@ public final class RuntimeValue {
 
     public static RuntimeValue structInstance(Map<String, RuntimeValue> fields) {
         return new RuntimeValue(Type.STRUCT, fields);
+    }
+
+    public static RuntimeValue heapRef(int heapAddress) {
+        return new RuntimeValue(Type.HEAP_REF, heapAddress);
+    }
+
+    public int asHeapAddress() {
+        if (type != Type.HEAP_REF) throw new IllegalStateException("Not a HEAP_REF");
+        return (int) value;
     }
 
     public boolean isNumeric() {
@@ -157,6 +168,10 @@ public final class RuntimeValue {
                 }
                 sb.append("}");
                 yield sb.toString();
+            }
+            case HEAP_REF -> {
+                int addr = (int) value;
+                yield "heap@" + String.format("0x%04X", addr);
             }
         };
     }

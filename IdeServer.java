@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class IdeServer {
 
     private static final Path WEB_ROOT = Path.of("ide", "web");
+    private static final Path WORKSPACE_ROOT = Path.of("").toAbsolutePath().normalize();
     private static final Map<String, StepSession> STEPS = new ConcurrentHashMap<>();
 
     private static final class StepSession {
@@ -79,10 +80,105 @@ public class IdeServer {
             case "/api/diagnostics" -> apiDiagnostics(ex, body);
             case "/api/parse-tree" -> apiParseTree(ex, body);
             case "/api/run" -> apiRun(ex, body);
+            case "/api/symbols" -> apiSymbols(ex, body);
+            case "/api/files/list" -> apiFilesList(ex, body);
+            case "/api/file/read" -> apiFileRead(ex, body);
+            case "/api/file/write" -> apiFileWrite(ex, body);
             case "/api/step/init" -> apiStepInit(ex, body);
             case "/api/step/next" -> apiStepNext(ex, body);
             default -> error(ex, 404, "Unknown API");
         }
+    }
+
+    private static void apiFilesList(HttpExchange ex, String body) throws IOException {
+        String dir = extractJsonString(body, "dir");
+        if (dir == null) dir = "";
+        Path resolvedDir = resolveWorkspaceDir(dir);
+        if (resolvedDir == null || !Files.isDirectory(resolvedDir)) {
+            okJson(ex, "{\"ok\":true,\"items\":[]}");
+            return;
+        }
+
+        StringBuilder arr = new StringBuilder("[");
+        boolean first = true;
+        try (var ds = Files.newDirectoryStream(resolvedDir)) {
+            var items = new java.util.ArrayList<Path>();
+            for (Path p : ds) items.add(p);
+            items.sort((a, b) -> a.getFileName().toString().compareToIgnoreCase(b.getFileName().toString()));
+            for (Path p : items) {
+                String name = p.getFileName().toString();
+                String rel = WORKSPACE_ROOT.relativize(p).toString().replace('\\', '/');
+                if (Files.isDirectory(p)) {
+                    if (!first) arr.append(',');
+                    first = false;
+                    arr.append("{\"type\":\"dir\",\"name\":\"").append(escJson(name)).append("\",\"path\":\"")
+                        .append(escJson(rel)).append("\"}");
+                } else if (name.endsWith(".sawa")) {
+                    if (!first) arr.append(',');
+                    first = false;
+                    arr.append("{\"type\":\"file\",\"name\":\"").append(escJson(name)).append("\",\"path\":\"")
+                        .append(escJson(rel)).append("\"}");
+                }
+            }
+        }
+        arr.append("]");
+        okJson(ex, "{\"ok\":true,\"items\":" + arr + "}");
+    }
+
+    private static void apiFileRead(HttpExchange ex, String body) throws IOException {
+        String path = extractJsonString(body, "path");
+        if (path == null || path.isBlank()) {
+            error(ex, 400, "path required");
+            return;
+        }
+        Path resolved = resolveWorkspaceFile(path);
+        if (resolved == null || !Files.isRegularFile(resolved)) {
+            error(ex, 404, "file not found");
+            return;
+        }
+        String text = Files.readString(resolved, StandardCharsets.UTF_8);
+        okJson(ex, "{\"ok\":true,\"text\":\"" + escJson(text) + "\"}");
+    }
+
+    private static void apiFileWrite(HttpExchange ex, String body) throws IOException {
+        String path = extractJsonString(body, "path");
+        String content = extractJsonString(body, "content");
+        if (path == null || path.isBlank()) {
+            error(ex, 400, "path required");
+            return;
+        }
+        if (content == null) content = "";
+        if (!path.replace('\\', '/').endsWith(".sawa")) {
+            error(ex, 400, "only .sawa files can be written");
+            return;
+        }
+        Path resolved = resolveWorkspaceFile(path);
+        if (resolved == null) {
+            error(ex, 403, "invalid path");
+            return;
+        }
+        Path parent = resolved.getParent();
+        if (parent != null) Files.createDirectories(parent);
+        Files.writeString(resolved, content, StandardCharsets.UTF_8);
+        okJson(ex, "{\"ok\":true}");
+    }
+
+    private static Path resolveWorkspaceDir(String dir) {
+        String p = dir == null ? "" : dir.trim();
+        p = p.replace('\\', '/');
+        if (p.startsWith("/")) p = p.substring(1);
+        Path resolved = WORKSPACE_ROOT.resolve(p).normalize();
+        if (!resolved.startsWith(WORKSPACE_ROOT)) return null;
+        return resolved;
+    }
+
+    private static Path resolveWorkspaceFile(String path) {
+        if (path == null) return null;
+        String p = path.trim().replace('\\', '/');
+        if (p.startsWith("/")) p = p.substring(1);
+        Path resolved = WORKSPACE_ROOT.resolve(p).normalize();
+        if (!resolved.startsWith(WORKSPACE_ROOT)) return null;
+        return resolved;
     }
 
     private static void apiHighlight(HttpExchange ex, String body) throws IOException {
@@ -122,6 +218,39 @@ public class IdeServer {
         okJson(ex, "{\"diagnostics\":" + arr + "}");
     }
 
+    private static void apiSymbols(HttpExchange ex, String body) throws IOException {
+        String src = extractJsonString(body, "source");
+        if (src == null) src = body;
+
+        var pr = WikangSawaPipeline.parse(src);
+        if (!pr.ok || pr.program == null) {
+            // Return empty table; Editor diagnostics will show parse errors anyway.
+            okJson(ex, "{\"ok\":false,\"symbols\":[]}");
+            return;
+        }
+
+        SemanticAnalyzer sema = new SemanticAnalyzer();
+        sema.analyze(pr.program);
+        if (sema.hasErrors()) {
+            okJson(ex, "{\"ok\":false,\"symbols\":[]}");
+            return;
+        }
+
+        var rows = sema.getSymbolsTable();
+        StringBuilder arr = new StringBuilder("[");
+        for (int i = 0; i < rows.size(); i++) {
+            if (i > 0) arr.append(',');
+            var r = rows.get(i);
+            arr.append("{\"name\":\"").append(escJson(r.name)).append('"')
+                .append(",\"kind\":\"").append(escJson(r.kind)).append('"')
+                .append(",\"type\":\"").append(escJson(r.type)).append('"')
+                .append(",\"knownValue\":\"").append(escJson(r.knownValue)).append('"')
+                .append('}');
+        }
+        arr.append("]");
+        okJson(ex, "{\"ok\":true,\"symbols\":" + arr + "}");
+    }
+
     private static String diagJson(WikangSawaPipeline.Diagnostic d) {
         return "{\"line\":" + d.line + ",\"col\":" + d.col
             + ",\"severity\":\"" + escJson(d.severity) + "\",\"message\":\""
@@ -147,7 +276,9 @@ public class IdeServer {
         var o = WikangSawaPipeline.runSourceQuiet(src, stdin);
         okJson(ex, "{\"exitCode\":" + o.exitCode
             + ",\"stdout\":\"" + escJson(o.stdout)
-            + "\",\"stderr\":\"" + escJson(o.stderr) + "\"}");
+            + "\",\"stderr\":\"" + escJson(o.stderr) + "\""
+            + ",\"optimStats\":" + o.optimStats
+            + ",\"gc\":" + o.gcStats + "}");
     }
 
     private static void apiStepInit(HttpExchange ex, String body) throws IOException {
@@ -210,7 +341,9 @@ public class IdeServer {
             STEPS.remove(id);
             String err = s.runtimeError != null ? s.runtimeError : "";
             okJson(ex, "{\"done\":true,\"line\":0,\"stdout\":\""
-                + escJson(drain(s)) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter) + "}");
+                + escJson(drain(s)) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter)
+                + ",\"optimStats\":" + s.interpreter.getCseStatsJson()
+                + ",\"gc\":" + s.interpreter.getGcStatsJson() + "}");
             return;
         }
         s.interpreter.stepContinue();
@@ -218,7 +351,9 @@ public class IdeServer {
             boolean got = s.stepDone.tryAcquire(30, TimeUnit.SECONDS);
             if (!got) {
                 okJson(ex, "{\"done\":false,\"line\":" + s.interpreter.getLastStepLine()
-                    + ",\"stdout\":\"" + escJson(drain(s)) + "\",\"error\":\"timeout\",\"memory\":" + memoryJson(s.interpreter) + "}");
+                    + ",\"stdout\":\"" + escJson(drain(s)) + "\",\"error\":\"timeout\",\"memory\":" + memoryJson(s.interpreter)
+                    + ",\"optimStats\":" + s.interpreter.getCseStatsJson()
+                    + ",\"gc\":" + s.interpreter.getGcStatsJson() + "}");
                 return;
             }
         } catch (InterruptedException e) {
@@ -230,7 +365,9 @@ public class IdeServer {
         boolean done = !s.thread.isAlive();
         if (done) STEPS.remove(id);
         okJson(ex, "{\"done\":" + done + ",\"line\":" + line + ",\"stdout\":\""
-            + escJson(out) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter) + "}");
+            + escJson(out) + "\",\"error\":\"" + escJson(err) + "\",\"memory\":" + memoryJson(s.interpreter)
+            + ",\"optimStats\":" + s.interpreter.getCseStatsJson()
+            + ",\"gc\":" + s.interpreter.getGcStatsJson() + "}");
     }
 
     private static String drain(StepSession s) {

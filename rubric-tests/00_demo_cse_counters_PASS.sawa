@@ -1,0 +1,10 @@
+# PASS: Common subexpression elimination (CSE) counters demo.
+#
+# The tracer should show non-zero CSE hits/misses/stores in “Optimization stats”.
+
+gamitin magpakita
+
+baryabol x = 5
+baryabol y = (x * x) + (x * x) + (x * x)
+magpakita y
+

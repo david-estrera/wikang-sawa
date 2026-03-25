@@ -1,0 +1,20 @@
+# PASS: Heap + mark-and-sweep GC demo (arrays/structs).
+#
+# Creates heap objects inside a function scope, but does NOT return them.
+# When the function returns, those heap objects become unreachable and should be
+# reclaimed by GC (visible in tracer GC stats + heap map).
+
+gamitin magpakita
+
+istraktura Box:
+    baryabol n = 123
+tapos
+
+punsyon makeStuff():
+    baryabol a = [10, 20, 30]
+    baryabol b = bagong Box()
+    balik 0
+tapos
+
+baryabol x = makeStuff()
+magpakita x

@@ -284,3 +284,33 @@ pre#out, pre#tree, pre#step {
 #memory-table thead th {
   background: #f3e8c8;
 }
+
+.optim-stats {
+  background: rgba(255, 254, 248, 0.92);
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.optim-stats pre {
+  margin: 0.35rem 0 0 0;
+  white-space: pre-wrap;
+}
+
+#symbols-table td,
+#symbols-table th {
+  border: 1px solid #c9bc98;
+  padding: 0.45rem;
+  text-align: left;
+}
+
+#symbols-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+#symbols-table thead th {
+  background: #f3e8c8;
+}

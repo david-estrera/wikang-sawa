@@ -33,6 +33,109 @@ public class Interpreter {
     private long mutationTick = 0;
     private final Map<String, Long> symbolVersion = new LinkedHashMap<>();
     private final Map<String, ExprCacheEntry> cseCache = new LinkedHashMap<>();
+    private long cseHits = 0;
+    private long cseMisses = 0;
+    private long cseStores = 0;
+
+    // --- Heap simulation (arrays + structs) + mark-and-sweep GC ---
+    private final Map<Integer, HeapObject> heap = new LinkedHashMap<>();
+    private int nextHeapAddress = 0x2000;
+    private long lastGcMarked = 0;
+    private final List<Integer> lastGcFreed = new ArrayList<>();
+
+    private static final class HeapObject {
+        enum Kind { ARRAY, STRUCT }
+
+        final Kind kind;
+        final List<RuntimeValue> array;
+        final Map<String, RuntimeValue> fields;
+
+        HeapObject(List<RuntimeValue> array) {
+            this.kind = Kind.ARRAY;
+            this.array = array;
+            this.fields = null;
+        }
+
+        HeapObject(Map<String, RuntimeValue> fields) {
+            this.kind = Kind.STRUCT;
+            this.array = null;
+            this.fields = fields;
+        }
+    }
+
+    private RuntimeValue allocateHeapArray(List<RuntimeValue> values) {
+        int addr = nextHeapAddress;
+        nextHeapAddress += 4;
+        heap.put(addr, new HeapObject(values));
+        return RuntimeValue.heapRef(addr);
+    }
+
+    private RuntimeValue allocateHeapStruct(Map<String, RuntimeValue> fields) {
+        int addr = nextHeapAddress;
+        nextHeapAddress += 4;
+        heap.put(addr, new HeapObject(fields));
+        return RuntimeValue.heapRef(addr);
+    }
+
+    private void traverseForGc(RuntimeValue v, Set<Integer> marked) {
+        if (v == null) return;
+        if (v.type == RuntimeValue.Type.HEAP_REF) {
+            int addr = v.asHeapAddress();
+            if (!marked.add(addr)) return;
+            HeapObject ho = heap.get(addr);
+            if (ho == null) return;
+            if (ho.kind == HeapObject.Kind.ARRAY) {
+                for (RuntimeValue elem : ho.array) {
+                    traverseForGc(elem, marked);
+                }
+            } else if (ho.kind == HeapObject.Kind.STRUCT) {
+                for (RuntimeValue fv : ho.fields.values()) {
+                    traverseForGc(fv, marked);
+                }
+            }
+            return;
+        }
+        // Back-compat: if any old ARRAY/STRUCT values exist, still traverse their contents.
+        if (v.type == RuntimeValue.Type.ARRAY) {
+            for (RuntimeValue elem : v.asArray()) traverseForGc(elem, marked);
+        } else if (v.type == RuntimeValue.Type.STRUCT) {
+            for (RuntimeValue fv : v.asStructFields().values()) traverseForGc(fv, marked);
+        }
+    }
+
+    private void runGc() {
+        // Mark: all heap objects reachable from variables in envStack.
+        Set<Integer> marked = new HashSet<>();
+        for (EnvFrame frame : envStack) {
+            for (RuntimeValue rv : frame.vars.values()) {
+                traverseForGc(rv, marked);
+            }
+        }
+
+        // Sweep: free heap objects not marked.
+        lastGcMarked = marked.size();
+        lastGcFreed.clear();
+        var it = heap.keySet().iterator();
+        while (it.hasNext()) {
+            int addr = it.next();
+            if (!marked.contains(addr)) {
+                it.remove();
+                lastGcFreed.add(addr);
+            }
+        }
+    }
+
+    public String getGcStatsJson() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"marked\":").append(lastGcMarked).append(",\"freed\":[");
+        for (int i = 0; i < lastGcFreed.size(); i++) {
+            if (i > 0) sb.append(',');
+            int addr = lastGcFreed.get(i);
+            sb.append('"').append(formatAddress(addr)).append('"');
+        }
+        sb.append("]}");
+        return sb.toString();
+    }
 
     public static final class MemoryCell {
         public final String variableName;
@@ -148,9 +251,8 @@ public class Interpreter {
     }
 
     private void afterStatementStep() {
-        if (stepping && stepDone != null) {
-            stepDone.release();
-        }
+        if (!heap.isEmpty()) runGc();
+        if (stepping && stepDone != null) stepDone.release();
     }
 
     private void executeBlockStatement(WikangSawaParser.BlockStatementContext bs) {
@@ -515,10 +617,18 @@ public class Interpreter {
                     throw new InterpreterException(ctx.getStart(), "Array index must be numeric.");
                 }
                 int idx = (int) idxV.asDouble();
-                if (base.type != RuntimeValue.Type.ARRAY) {
+                List<RuntimeValue> arr;
+                if (base.type == RuntimeValue.Type.ARRAY) {
+                    arr = base.asArray();
+                } else if (base.type == RuntimeValue.Type.HEAP_REF) {
+                    HeapObject ho = heap.get(base.asHeapAddress());
+                    if (ho == null || ho.kind != HeapObject.Kind.ARRAY) {
+                        throw new InterpreterException(ctx.getStart(), "Indexing requires a heap array, got invalid heap reference.");
+                    }
+                    arr = ho.array;
+                } else {
                     throw new InterpreterException(ctx.getStart(), "Indexing requires an array, got " + base.type + ".");
                 }
-                List<RuntimeValue> arr = base.asArray();
                 if (idx < 0 || idx >= arr.size()) {
                     throw new InterpreterException(ctx.getStart(), "Array index out of bounds: " + idx + ".");
                 }
@@ -531,10 +641,18 @@ public class Interpreter {
     }
 
     private RuntimeValue readField(Token where, RuntimeValue base, String field) {
-        if (base.type != RuntimeValue.Type.STRUCT) {
+        Map<String, RuntimeValue> m;
+        if (base.type == RuntimeValue.Type.STRUCT) {
+            m = base.asStructFields();
+        } else if (base.type == RuntimeValue.Type.HEAP_REF) {
+            HeapObject ho = heap.get(base.asHeapAddress());
+            if (ho == null || ho.kind != HeapObject.Kind.STRUCT) {
+                throw new InterpreterException(where, "Field access requires a heap struct, got invalid heap reference.");
+            }
+            m = ho.fields;
+        } else {
             throw new InterpreterException(where, "Field access requires a struct, got " + base.type + ".");
         }
-        Map<String, RuntimeValue> m = base.asStructFields();
         if (!m.containsKey(field)) {
             throw new InterpreterException(where, "Unknown struct field '" + field + "'.");
         }
@@ -587,7 +705,7 @@ public class Interpreter {
             WikangSawaParser.ExpressionContext ex = def.inits.get(fn);
             fields.put(fn, evalExpression(ex));
         }
-        return RuntimeValue.structInstance(fields);
+        return allocateHeapStruct(fields);
     }
 
     private RuntimeValue evalArrayLiteral(WikangSawaParser.ArrayLiteralContext ctx) {
@@ -595,7 +713,7 @@ public class Interpreter {
         for (WikangSawaParser.ExpressionContext e : ctx.expression()) {
             values.add(evalExpression(e));
         }
-        return RuntimeValue.array(values);
+        return allocateHeapArray(values);
     }
 
     private RuntimeValue evalLiteral(WikangSawaParser.LiteralContext ctx) {
@@ -822,7 +940,41 @@ public class Interpreter {
                 out.add(new MemoryCell(name, addrText, valueText));
             }
         }
+        // Also show heap objects allocated for arrays/structs.
+        for (Map.Entry<Integer, HeapObject> e : heap.entrySet()) {
+            int addr = e.getKey();
+            String addrText = formatAddress(addr);
+            String name = "heap[" + addrText + "]";
+            String valueText = renderHeapObjectValue(e.getValue());
+            out.add(new MemoryCell(name, addrText, valueText));
+        }
         return out;
+    }
+
+    private String renderHeapObjectValue(HeapObject ho) {
+        if (ho == null) return "";
+        if (ho.kind == HeapObject.Kind.ARRAY) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("array(size=").append(ho.array.size()).append(")[");
+            for (int i = 0; i < ho.array.size(); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(renderMemoryValue(ho.array.get(i)));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        if (ho.kind == HeapObject.Kind.STRUCT) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("struct{");
+            int i = 0;
+            for (Map.Entry<String, RuntimeValue> fe : ho.fields.entrySet()) {
+                if (i++ > 0) sb.append(", ");
+                sb.append(fe.getKey()).append("=").append(renderMemoryValue(fe.getValue()));
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+        return "";
     }
 
     private String renderMemoryValue(RuntimeValue v) {
@@ -831,6 +983,9 @@ public class Interpreter {
             if (target != null) {
                 return formatAddress(target) + " (points to " + v.refTargetName() + ")";
             }
+        }
+        if (v.type == RuntimeValue.Type.HEAP_REF) {
+            return formatAddress(v.asHeapAddress()) + " (heap object)";
         }
         return v.toString();
     }
@@ -861,16 +1016,27 @@ public class Interpreter {
         if (!isCseEligible(ctx)) return null;
         String key = ctx.getText();
         ExprCacheEntry e = cseCache.get(key);
-        if (e == null) return null;
+        if (e == null) {
+            cseMisses++;
+            return null;
+        }
         for (Map.Entry<String, Long> dep : e.deps.entrySet()) {
             long cur = symbolVersion.getOrDefault(dep.getKey(), 0L);
-            if (cur != dep.getValue()) return null;
+            if (cur != dep.getValue()) {
+                cseMisses++;
+                return null;
+            }
         }
+        cseHits++;
         return e.value;
     }
 
     private void storeCachedExpr(WikangSawaParser.ExpressionContext ctx, RuntimeValue value) {
         if (!isCseEligible(ctx)) return;
+        // Avoid caching non-primitive/container values that may later be reclaimed (future GC work).
+        if (value.type == RuntimeValue.Type.ARRAY || value.type == RuntimeValue.Type.STRUCT) return;
+        if (value.type == RuntimeValue.Type.REFERENCE) return;
+        if (value.type == RuntimeValue.Type.HEAP_REF) return;
         String key = ctx.getText();
         Set<String> ids = collectIdentifiers(ctx);
         Map<String, Long> depv = new LinkedHashMap<>();
@@ -878,11 +1044,16 @@ public class Interpreter {
             depv.put(id, symbolVersion.getOrDefault(id, 0L));
         }
         cseCache.put(key, new ExprCacheEntry(value, depv));
+        cseStores++;
+    }
+
+    public String getCseStatsJson() {
+        return "{\"hits\":" + cseHits + ",\"misses\":" + cseMisses + ",\"stores\":" + cseStores + "}";
     }
 
     private boolean isCseEligible(WikangSawaParser.ExpressionContext ctx) {
         // Safe CSE only for pure expressions without function calls, input effects, or pointer/address operators.
-        return !containsFunctionCall(ctx) && !containsAmpersand(ctx) && !containsUnaryStar(ctx);
+        return !containsFunctionCall(ctx) && !containsAmpersand(ctx) && !containsUnaryStar(ctx) && !containsBagong(ctx);
     }
 
     private boolean containsFunctionCall(ParseTree tree) {
@@ -912,6 +1083,17 @@ public class Interpreter {
         }
         for (int i = 0; i < tree.getChildCount(); i++) {
             if (containsUnaryStar(tree.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private boolean containsBagong(ParseTree tree) {
+        if (tree == null) return false;
+        if (tree instanceof WikangSawaParser.PrimaryContext p) {
+            if (p.BAGONG() != null) return true;
+        }
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            if (containsBagong(tree.getChild(i))) return true;
         }
         return false;
     }

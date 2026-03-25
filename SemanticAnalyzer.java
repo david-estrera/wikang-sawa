@@ -65,6 +65,7 @@ public class SemanticAnalyzer {
     private int deadBranchesPruned = 0;
     private final List<String> foldEvents = new ArrayList<>();
     private final List<String> pruneEvents = new ArrayList<>();
+    private final List<String> simplifyEvents = new ArrayList<>();
 
     private static final class ConstValue {
         final ValueType type;
@@ -120,6 +121,9 @@ public class SemanticAnalyzer {
             }
             for (String s : pruneEvents) {
                 System.out.println("    [Prune] " + s);
+            }
+            for (String s : simplifyEvents) {
+                System.out.println("    [Simplify] " + s);
             }
         }
 
@@ -269,6 +273,13 @@ public class SemanticAnalyzer {
         ValueType rhs = typeOfExpression(ctx.expression());
         symbols.put(name, rhs);
         constantValues.remove(name);
+        ConstValue cv = evaluateConstExpression(ctx.expression());
+        if (cv != null) {
+            constantValues.put(name, cv);
+            foldedConstants++; // treat as folding/propagation opportunity for demo visibility
+            foldEvents.add("line " + ctx.getStart().getLine() + ": baryabol " + name + " = "
+                + ctx.expression().getText() + " -> " + constValueToText(cv));
+        }
         String sn = extractBagongStructName(ctx.expression());
         if (sn != null) varStructType.put(name, sn);
     }
@@ -693,6 +704,14 @@ public class SemanticAnalyzer {
             double a = asDouble(acc);
             double b = asDouble(rhs);
             boolean dec = isDecimalConst(acc) || isDecimalConst(rhs);
+            if ("+".equals(op) && isConstZero(rhs)) {
+                simplifyEvents.add("line " + ctx.getStart().getLine() + ": " + acc.value + " + 0 -> " + acc.value);
+                continue;
+            }
+            if ("-".equals(op) && isConstZero(rhs)) {
+                simplifyEvents.add("line " + ctx.getStart().getLine() + ": " + acc.value + " - 0 -> " + acc.value);
+                continue;
+            }
             double v = switch (op) {
                 case "+" -> a + b;
                 case "-" -> a - b;
@@ -714,6 +733,26 @@ public class SemanticAnalyzer {
             double a = asDouble(acc);
             double b = asDouble(rhs);
             boolean dec = isDecimalConst(acc) || isDecimalConst(rhs);
+            if ("*".equals(op)) {
+                if (isConstZero(acc) || isConstZero(rhs)) {
+                    simplifyEvents.add("line " + ctx.getStart().getLine() + ": x * 0 -> 0");
+                    acc = new ConstValue(dec ? ValueType.DECIMAL : ValueType.NUMBER, 0);
+                    continue;
+                }
+                if (isConstOne(rhs)) {
+                    simplifyEvents.add("line " + ctx.getStart().getLine() + ": x * 1 -> x");
+                    continue;
+                }
+                if (isConstOne(acc)) {
+                    simplifyEvents.add("line " + ctx.getStart().getLine() + ": 1 * x -> x");
+                    acc = rhs;
+                    continue;
+                }
+            }
+            if ("/".equals(op) && isConstOne(rhs)) {
+                simplifyEvents.add("line " + ctx.getStart().getLine() + ": x / 1 -> x");
+                continue;
+            }
             double v = switch (op) {
                 case "*" -> a * b;
                 case "/" -> a / b;
@@ -724,6 +763,18 @@ public class SemanticAnalyzer {
             acc = dec ? new ConstValue(ValueType.DECIMAL, v) : new ConstValue(ValueType.NUMBER, (long) v);
         }
         return acc;
+    }
+
+    private boolean isConstZero(ConstValue v) {
+        if (v == null) return false;
+        if (!isNumericConst(v)) return false;
+        return asDouble(v) == 0.0;
+    }
+
+    private boolean isConstOne(ConstValue v) {
+        if (v == null) return false;
+        if (!isNumericConst(v)) return false;
+        return asDouble(v) == 1.0;
     }
 
     private ConstValue evalConstFactor(WikangSawaParser.FactorContext ctx) {
@@ -824,5 +875,36 @@ public class SemanticAnalyzer {
         int line = where != null ? where.getLine() : 0;
         int col = where != null ? where.getCharPositionInLine() : 0;
         errors.add(new SemanticError(line, col, message));
+    }
+
+    public static final class SymbolInfo {
+        public final String name;
+        public final String kind; // konstant vs baryabol
+        public final String type; // semantic ValueType
+        public final String knownValue; // constantValues (if any)
+
+        SymbolInfo(String name, String kind, String type, String knownValue) {
+            this.name = name;
+            this.kind = kind;
+            this.type = type;
+            this.knownValue = knownValue;
+        }
+    }
+
+    /** Compile-time symbols table for IDE display (types + known constants). */
+    public List<SymbolInfo> getSymbolsTable() {
+        List<SymbolInfo> out = new ArrayList<>();
+        for (Map.Entry<String, ValueType> e : symbols.entrySet()) {
+            String name = e.getKey();
+            ValueType t = e.getValue();
+            String kind = consts.contains(name) ? "konstant" : "baryabol";
+
+            String known = "<?>"; // default if we can't prove a constant
+            ConstValue cv = constantValues.get(name);
+            if (cv != null) known = constValueToText(cv);
+
+            out.add(new SymbolInfo(name, kind, t.toString(), known));
+        }
+        return out;
     }
 }

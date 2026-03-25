@@ -13,9 +13,3 @@ magbasa b
 
 baryabol total = times2(a) + b
 magpakita total
-
-baryabol i = 0
-para i = 1 hanggang 3:
-    total = total + i
-tapos
-magpakita total

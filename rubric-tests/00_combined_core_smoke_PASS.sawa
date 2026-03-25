@@ -9,13 +9,6 @@ punsyon add(a, b):
     balik a + b
 tapos
 
-punsyon fact(n):
-    kung n <= 1:
-        balik 1
-    tapos
-    balik n * fact(n - 1)
-tapos
-
 istraktura Point:
     baryabol x = 1
     baryabol y = 2
@@ -32,7 +25,6 @@ magpakita x
 
 baryabol sum = add(nums[0], nums[2]) + p.x + base
 magpakita sum
-magpakita fact(5)
 
 kung x > 6 at hindi mali:
     magpakita "if-then"

@@ -15,6 +15,7 @@
     <button type="button" data-tab="editor" class="active">Editor</button>
     <button type="button" data-tab="run">Takbo & Output</button>
     <button type="button" data-tab="step">Hakbang / Trace</button>
+    <button type="button" data-tab="symbols">Symbols</button>
     <button type="button" data-tab="tree">Parse tree</button>
     <button type="button" data-tab="help">Tulong</button>
   </nav>
@@ -25,6 +26,21 @@
         <textarea id="code" spellcheck="false">gamitin magpakita
 magpakita "Kumusta, mundo!"
 </textarea>
+      </div>
+      <div class="file-explorer">
+        <div class="row" style="margin-top:1rem">
+          <label class="hint">Folder:</label>
+          <input id="file-dir" value="rubric-tests" style="flex: 1; padding: 0.4rem; border-radius: 10px; border: 1px solid rgba(0,0,0,.12);" />
+          <button type="button" class="btn secondary" id="btn-files-list">Ilista</button>
+        </div>
+        <div class="row" style="margin-top:0.5rem">
+          <select id="file-select" style="width: 100%; padding: 0.45rem; border-radius: 10px; border: 1px solid rgba(0,0,0,.12);"></select>
+        </div>
+        <div class="row" style="margin-top:0.5rem">
+          <button type="button" class="btn" id="btn-file-load">I-load</button>
+          <button type="button" class="btn secondary" id="btn-file-save">I-save</button>
+        </div>
+        <pre id="file-status" style="margin:0.5rem 0 0 0;"></pre>
       </div>
       <div class="diag-box">
         <div class="diag-title">Diagnostics</div>
@@ -66,7 +82,33 @@ magpakita "Kumusta, mundo!"
           </table>
         </div>
       </div>
+      <div class="optim-stats">
+        <strong>Optimization stats</strong>
+        <pre id="optimStats"></pre>
+        <strong style="display:block;margin-top:0.6rem">GC stats</strong>
+        <pre id="gcStats"></pre>
+      </div>
       <pre id="step"></pre>
+    </section>
+    <section id="panel-symbols" class="panel">
+      <p class="hint">Compile-time symbols (types + known constants).</p>
+      <div class="row" style="margin-top:0.5rem">
+        <button type="button" class="btn" id="btn-symbols-refresh">I-refresh</button>
+      </div>
+      <div class="symbols-table-wrap" style="margin-top:0.8rem">
+        <table id="symbols-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Kind</th>
+              <th>Type</th>
+              <th>Known Value</th>
+            </tr>
+          </thead>
+          <tbody id="symbols-body"></tbody>
+        </table>
+      </div>
+      <pre id="symbols-status" style="margin-top:0.6rem"></pre>
     </section>
     <section id="panel-tree" class="panel">
       <div class="row">

@@ -1,4 +1,4 @@
-# PASS: Single-file optimization demo (Constant Folding + Dead Code Pruning).
+# (Constant Folding + Pruning).
 # Best used with ParserDriver to show semantic optimization log.
 
 gamitin magpakita
@@ -8,7 +8,8 @@ konstant b = (10 - 1) * 2
 konstant c = a + b
 
 magpakita c
-
+konstant x = 1
+baryabol y = 10
 kung mali:
     magpakita unknown_name + 1
 tapos

@@ -1,0 +1,14 @@
+# Constant propagation + algebraic simplifications demo.
+# Shows:
+# - baryabol becomes compile-time constant when RHS is fully constant
+# - constant declaration uses propagated constant in expression
+# - algebraic neutral element simplifications (x + 0, x * 1, x / 1) are logged in semantic output
+
+gamitin magpakita
+
+baryabol x = 2 + 3 * 4
+konstant y = x + 0
+konstant z = y * 1
+konstant w = z / 1
+
+magpakita w

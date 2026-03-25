@@ -194,13 +194,21 @@ document.getElementById('btn-run').addEventListener('click', async () => {
   out.textContent = 'Running…';
   try {
     const j = await api('/api/run', { source, stdin });
+    const opt = j.optimStats
+      ? `\n--- optimization stats (CSE) ---\n  hits=${j.optimStats.hits}\n  misses=${j.optimStats.misses}\n  stores=${j.optimStats.stores}`
+      : '';
+    const gc = j.gc
+      ? `\n--- GC stats ---\n  marked=${j.gc.marked}\n  freed=${(j.gc.freed || []).join(', ')}`
+      : '';
     out.textContent =
       'exit ' +
       j.exitCode +
       '\n\n--- stdout ---\n' +
       j.stdout +
       '\n--- stderr ---\n' +
-      j.stderr;
+      j.stderr +
+      opt +
+      gc;
   } catch (e) {
     out.textContent = String(e);
   }
@@ -292,8 +300,12 @@ document.getElementById('btn-step-init').addEventListener('click', async () => {
   const source = editor.getValue();
   const stdin = document.getElementById('stdin').value;
   const step = document.getElementById('step');
+  const optPre = document.getElementById('optimStats');
+  const gcPre = document.getElementById('gcStats');
   step.textContent = 'Starting…';
   currentSessionId = null;
+  if (optPre) optPre.textContent = 'CSE hits=0, misses=0, stores=0';
+  if (gcPre) gcPre.textContent = 'marked=0, freed=[]';
   if (traceEditor) {
     traceEditor.setValue(source);
     if (traceLineHandle != null) {
@@ -325,6 +337,14 @@ document.getElementById('btn-step-next').addEventListener('click', async () => {
     const j = await api('/api/step/next', { sessionId: currentSessionId });
     highlightTraceLine(j.line);
     updateMemory(j.memory || []);
+    if (j.optimStats && document.getElementById('optimStats')) {
+      document.getElementById('optimStats').textContent =
+        `CSE hits=${j.optimStats.hits}, misses=${j.optimStats.misses}, stores=${j.optimStats.stores}`;
+    }
+    if (j.gc && document.getElementById('gcStats')) {
+      document.getElementById('gcStats').textContent =
+        `marked=${j.gc.marked}, freed=[${(j.gc.freed || []).join(', ')}]`;
+    }
     step.textContent +=
       '\n---\nline ' + j.line + (j.done ? ' (done)' : '') + '\n' + (j.stdout || '') + (j.error || '');
     if (j.done) currentSessionId = null;
@@ -377,6 +397,100 @@ function escapeHtml(s) {
     .replaceAll('"', '&quot;');
 }
 
+async function loadSymbolsTable() {
+  const statusEl = document.getElementById('symbols-status');
+  const bodyEl = document.getElementById('symbols-body');
+  if (!statusEl || !bodyEl) return;
+  statusEl.textContent = 'Loading symbols…';
+  bodyEl.innerHTML = '';
+
+  try {
+    const j = await api('/api/symbols', { source: editor.getValue() });
+    if (!j.ok) {
+      statusEl.textContent = 'Symbols unavailable (fix semantic errors).';
+      return;
+    }
+
+    const rows = j.symbols || [];
+    if (rows.length === 0) {
+      statusEl.textContent = '(No symbols found.)';
+      return;
+    }
+
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      const tdKind = document.createElement('td');
+      const tdType = document.createElement('td');
+      const tdKnown = document.createElement('td');
+      tdName.textContent = r.name || '';
+      tdKind.textContent = r.kind || '';
+      tdType.textContent = r.type || '';
+      tdKnown.textContent = r.knownValue || '';
+      tr.appendChild(tdName);
+      tr.appendChild(tdKind);
+      tr.appendChild(tdType);
+      tr.appendChild(tdKnown);
+      bodyEl.appendChild(tr);
+    });
+
+    statusEl.textContent = 'Symbols updated.';
+  } catch (e) {
+    statusEl.textContent = String(e);
+  }
+}
+
+function setFileStatus(msg) {
+  const el = document.getElementById('file-status');
+  if (!el) return;
+  el.textContent = msg || '';
+}
+
+async function loadFileList(dir) {
+  const j = await api('/api/files/list', { dir });
+  if (!j || !j.ok) throw new Error('File list failed');
+  const sel = document.getElementById('file-select');
+  sel.innerHTML = '';
+  (j.items || []).forEach((it) => {
+    if (it.type !== 'file') return;
+    const opt = document.createElement('option');
+    opt.value = it.path;
+    opt.textContent = it.name;
+    sel.appendChild(opt);
+  });
+  if (sel.options.length > 0) sel.value = sel.options[0].value;
+  setFileStatus((j.items || []).length ? 'May nahanap.' : 'Walang file.');
+}
+
+async function loadSelectedFile() {
+  const sel = document.getElementById('file-select');
+  const path = sel ? sel.value : null;
+  if (!path) {
+    setFileStatus('Pumili muna ng file.');
+    return;
+  }
+  setFileStatus('Ilo-load…');
+  const j = await api('/api/file/read', { path });
+  if (!j.ok) throw new Error('Cannot read file');
+  editor.setValue(j.text || '');
+  editor.focus();
+  if (traceEditor) traceEditor.setValue(editor.getValue());
+  setFileStatus('Na-load: ' + path);
+}
+
+async function saveSelectedFile() {
+  const sel = document.getElementById('file-select');
+  const path = sel ? sel.value : null;
+  if (!path) {
+    setFileStatus('Pumili muna ng file para i-save.');
+    return;
+  }
+  setFileStatus('I-save…');
+  const j = await api('/api/file/write', { path, content: editor.getValue() });
+  if (!j.ok) throw new Error('Cannot write file');
+  setFileStatus('Nai-save: ' + path);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   editor = CodeMirror.fromTextArea(document.getElementById('code'), {
     lineNumbers: true,
@@ -403,4 +517,42 @@ window.addEventListener('DOMContentLoaded', () => {
   updateMemory([]);
   applyHighlight();
   updateDiagnostics();
+
+  // Symbols table (compile-time)
+  const btnSymbolsRefresh = document.getElementById('btn-symbols-refresh');
+  const symbolsTabBtn = document.querySelector('button[data-tab="symbols"]');
+  if (symbolsTabBtn) {
+    symbolsTabBtn.addEventListener('click', async () => {
+      await loadSymbolsTable();
+    });
+  }
+  if (btnSymbolsRefresh) {
+    btnSymbolsRefresh.addEventListener('click', async () => {
+      await loadSymbolsTable();
+    });
+  }
+
+  // Workspace file explorer
+  const dirInput = document.getElementById('file-dir');
+  const btnList = document.getElementById('btn-files-list');
+  const btnLoad = document.getElementById('btn-file-load');
+  const btnSave = document.getElementById('btn-file-save');
+  if (btnList) {
+    btnList.addEventListener('click', async () => {
+      try {
+        const dir = dirInput ? dirInput.value : 'rubric-tests';
+        setFileStatus('Ilista…');
+        await loadFileList(dir);
+        setFileStatus('Nai-update ang listahan.');
+      } catch (e) {
+        setFileStatus(String(e));
+      }
+    });
+  }
+  if (btnLoad) btnLoad.addEventListener('click', async () => loadSelectedFile().catch((e) => setFileStatus(String(e))));
+  if (btnSave) btnSave.addEventListener('click', async () => saveSelectedFile().catch((e) => setFileStatus(String(e))));
+  if (dirInput) {
+    // initial list (best-effort)
+    loadFileList(dirInput.value || 'rubric-tests').catch(() => {});
+  }
 });

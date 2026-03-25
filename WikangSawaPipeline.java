@@ -83,7 +83,7 @@ public final class WikangSawaPipeline {
             throws InterpreterException {
         Interpreter ip = new Interpreter(stdin, stdout);
         ip.execute(program);
-        return "";
+        return ip.getCseStatsJson();
     }
 
     /** 0 = success, 1 = parse, 2 = semantic, 3 = runtime */
@@ -91,11 +91,31 @@ public final class WikangSawaPipeline {
         public final int exitCode;
         public final String stdout;
         public final String stderr;
+        public final String optimStats;
+        public final String gcStats;
 
         public RunOutcome(int exitCode, String stdout, String stderr) {
             this.exitCode = exitCode;
             this.stdout = stdout;
             this.stderr = stderr;
+            this.optimStats = "{}";
+            this.gcStats = "{}";
+        }
+
+        public RunOutcome(int exitCode, String stdout, String stderr, String optimStats) {
+            this.exitCode = exitCode;
+            this.stdout = stdout;
+            this.stderr = stderr;
+            this.optimStats = optimStats == null ? "{}" : optimStats;
+            this.gcStats = "{}";
+        }
+
+        public RunOutcome(int exitCode, String stdout, String stderr, String optimStats, String gcStats) {
+            this.exitCode = exitCode;
+            this.stdout = stdout;
+            this.stderr = stderr;
+            this.optimStats = optimStats == null ? "{}" : optimStats;
+            this.gcStats = gcStats == null ? "{}" : gcStats;
         }
     }
 
@@ -128,13 +148,15 @@ public final class WikangSawaPipeline {
         try {
             InputStream in = new ByteArrayInputStream(
                 stdinText == null ? new byte[0] : stdinText.getBytes(StandardCharsets.UTF_8));
-            runInterpret(pr.program, in, po);
+            Interpreter ip = new Interpreter(in, po);
+            ip.execute(pr.program);
+            String optimStats = ip.getCseStatsJson();
+            String gcStats = ip.getGcStatsJson();
+            return new RunOutcome(0, bout.toString(StandardCharsets.UTF_8), berr.toString(StandardCharsets.UTF_8), optimStats, gcStats);
         } catch (InterpreterException ex) {
             pe.println(ex.getMessage());
             return new RunOutcome(3, bout.toString(StandardCharsets.UTF_8), berr.toString(StandardCharsets.UTF_8));
         }
-
-        return new RunOutcome(0, bout.toString(StandardCharsets.UTF_8), berr.toString(StandardCharsets.UTF_8));
     }
 
     public static RunOutcome runFileQuiet(Path path, String stdinText) throws IOException {
